@@ -3,30 +3,41 @@
 
 <h1>Friends Of Award</h1>
 
-<button>1</button>
-<button>2</button>
-<button>3</button>
-<button>4</button>
-<button>5</button>
-<button>6</button>
-<button>7</button>
-<button>8</button>
-<button>9</button>
-<button>10</button>
-<button>11</button>
-<button>12</button>
-<button>13</button>
-<button>14</button>
-<button>15</button>
-<button>16</button>
-<button>17</button>
-<button>18</button>
-<button>19</button>
-<button>20</button>
+<h2>Geben Sie uns Ihre persönlichen Favoriten bekannt!</h2>
+<h2>Einfacher Klick = Favorit (max. 5)</h2>
+<h2>Doppelklick = Topfavorit (max. 1)</h2>
+<h3>Diese Abstimmung ist anonym und auf ein Gerät beschränkt.</h3>
 
+<div class="buttons">
+	@foreach(int index in Enumerable.Range(0, selectableButtons.Count))
+	{
+		var selectableButton = selectableButtons[index];
+		<button @onclick="() => ChangeButtonValue(index)" 
+		class="@(selectableButton.Item2 == 1 ? "favorite" : selectableButton.Item2 == 2 ? "topfavorite" : "")">
+		@(index+1)</button>
+	}
+</div>
 <label></label>
-<button>Bewertung absenden</button>
+<p><button>Bewertung absenden</button></p>
+
 
 @code {
+	List<(string, int)> selectableButtons = new();
 
+	protected override Task OnInitializedAsync()
+	{
+		for (int i = 0; i < 20; i++)
+		{
+			selectableButtons.Add(($"selectedButton{i + 1}", 0));
+		}
+
+		return base.OnInitializedAsync();
+	}
+
+	private void ChangeButtonValue(int btnIndex)
+	{
+		var button = selectableButtons[btnIndex];
+		int newValue = button.Item2 < 2 ? button.Item2 + 1 : 0;
+		selectableButtons[btnIndex] = (button.Item1, newValue);
+	}
 }
