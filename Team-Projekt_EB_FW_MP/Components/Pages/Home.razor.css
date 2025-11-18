@@ -1,0 +1,36 @@
+﻿body {
+    margin: 0;
+}
+
+.buttons {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 25vw;
+    gap: 0.5vw;
+    justify-content: center;
+}
+
+.buttons button {
+    position: relative;
+    font-size: 1.5vw;
+    width: 5vw;
+    height: 2.5vw;
+    text-align: center;
+    background-color: #c4c4c4;
+    border: none;
+    border-radius: 0.5vw;
+}
+
+.buttons button:hover {
+    background-color: #d6d6d6;
+}
+
+.buttons button.topfavorite {
+    background-color: #f7c22f;
+}
+
+.buttons button.favorite {
+    background-color: #34c75b;
+}
