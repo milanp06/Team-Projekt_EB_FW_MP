@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Team-Projekt_EB_FW_MP", "Team-Projekt_EB_FW_MP\Team-Projekt_EB_FW_MP.csproj", "{C1EA8E61-3F0B-426E-B9B6-2B32FB003093}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatenbankLib", "DatenbankLib\DatenbankLib.csproj", "{571E9464-A199-4693-B2FF-F70A3BF376CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{C1EA8E61-3F0B-426E-B9B6-2B32FB003093}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1EA8E61-3F0B-426E-B9B6-2B32FB003093}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1EA8E61-3F0B-426E-B9B6-2B32FB003093}.Release|Any CPU.Build.0 = Release|Any CPU
+		{571E9464-A199-4693-B2FF-F70A3BF376CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{571E9464-A199-4693-B2FF-F70A3BF376CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{571E9464-A199-4693-B2FF-F70A3BF376CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{571E9464-A199-4693-B2FF-F70A3BF376CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
