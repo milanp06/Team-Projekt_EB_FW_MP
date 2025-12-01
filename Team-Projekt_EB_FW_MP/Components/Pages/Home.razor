@@ -3,26 +3,68 @@
 
 <h1>Friends Of Award</h1>
 
-<h2>Geben Sie uns Ihre persönlichen Favoriten bekannt!</h2>
-<h2>Einfacher Klick = Favorit (max. 5)</h2>
-<h2>Doppelklick = Topfavorit (max. 1)</h2>
-<h3>Diese Abstimmung ist anonym und auf ein Gerät beschränkt.</h3>
+<div class="legend-box">
+	<p>Geben Sie uns Ihre persönlichen Favoriten bekannt!</p>
+	<p>
+		Einfacher Klick = Favorit (max. 5)<br />
+		Doppelklick = Topfavorit (max. 1)
+	</p>
+	<p class="small-note">Diese Abstimmung ist anonym und auf ein Gerät beschränkt.</p>
+</div>
 
-<div class="buttons">
+<div class="buttonGrid">
 	@foreach(int index in Enumerable.Range(0, selectableButtons.Count))
 	{
 		var selectableButton = selectableButtons[index];
-		<button @onclick="() => ChangeButtonValue(index)" 
-		class="@(selectableButton.Item2 == 1 ? "favorite" : selectableButton.Item2 == 2 ? "topfavorite" : "")">
+		<button @ondblclick="() => HandleDblClick(index)" @onclick="() => HandleClick(index)" 
+		class="@(selectableButton.Item2 == 1 ? "favorit" : selectableButton.Item2 == 2 ? "topfavorit" : "")">
 		@(index+1)</button>
 	}
 </div>
-<label></label>
-<p><button>Bewertung absenden</button></p>
+<div class="message">@info</div>
+<div class="message" style="color:red">@fehlerMeldung</div>
+<p><button class="submitBtn" disabled="@(favorite == 5 && topfavorite == 1 ? true : false)" @onclick="SubmitVote">Bewertung absenden</button></p>
+
+<div class="adminToggle" @onclick="@(() => { adminLogin = !adminLogin; })">🏠</div>
+<div class="adminPanel" style="display: @(adminLogin ? "block" : "none");">
+	<h2>Admin Panel</h2>
+	<div>
+		<input type="password" @bind="adminPassword" />
+        <button @onclick="CheckAdmin">Login</button>
+        <button @onclick="LogoutAdmin">Logout</button>
+	</div>
+	<div id="adminControls" style="display: @(isAdmin ? "block" : "none");">
+		<button @onclick="StartVoting">Abstimmung starten</button>
+		<button @onclick="StopVoting">Abstimmung stoppen</button>
+		<button @onclick="ResetVotes">Alle Bewertungen löschen</button>
+		<button @onclick="ClearLocalVote">Neue Abstimmung auf diesem Gerät erlauben</button>
+		<button @onclick="ChangePassword">Passwort ändern</button>
+		<button @onclick="ExportExcel">Excel exportieren</button>
+		<div id="adminStatus" style="margin-top:10px; color:blue;"></div>
+		<table id="summaryTable">
+			<thead>
+				<tr>
+					<th>Arbeit</th>
+					<th>Anzahl Nennung Favorit</th>
+					<th>Anzahl Nennung Topfavorit</th>
+					<th>Punkte</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</div>
+</div>
 
 
 @code {
 	List<(string, int)> selectableButtons = new();
+	private List<string, int> favorite = new();
+	private int topfavorite = 0;
+	private string info = "Offen 5 Favoriten, 1 Topfavorit";
+	private string fehlerMeldung = "";
+	private string adminPassword = "";
+	private bool adminLogin = false;
+	private bool isAdmin = false;
 
 	protected override Task OnInitializedAsync()
 	{
@@ -34,10 +76,102 @@
 		return base.OnInitializedAsync();
 	}
 
-	private void ChangeButtonValue(int btnIndex)
+	private void HandleClick(int btnIndex)
 	{
 		var button = selectableButtons[btnIndex];
-		int newValue = button.Item2 < 2 ? button.Item2 + 1 : 0;
+		int newValue = 0;
+		if (favorite <= 4)
+		{
+			if (button.Item2 == 0)
+			{
+				newValue++;
+				favorite++;
+				favorite.Add((button.Item1, 1));
+			}
+		}
+
+		if (button.Item2 == 1)
+		{
+			newValue = 0;
+			favorite--;
+			favorite.Remove((button.Item1, 0));
+		}
+		if (button.Item2 == 2)
+		{
+			newValue = 0;
+			topfavorite--;
+		}
+
+		info = UpdateInfo();
+
 		selectableButtons[btnIndex] = (button.Item1, newValue);
 	}
+
+	private void HandleDblClick(int btnIndex)
+	{
+		var button = selectableButtons[btnIndex];
+		int newValue = 0;
+		if (topfavorite == 0)
+		{
+			if (button.Item2 == 0)
+			{
+				newValue = 2;
+				topfavorite++;
+			}
+			else if (button.Item2 == 1)
+			{
+				newValue = 2;
+				favorite--;
+				favorite.Remove((button.Item1, 0));
+				topfavorite++;
+			}
+		}
+		if (button.Item2 == 2)
+		{
+			newValue = 0;
+			topfavorite--;
+		}
+
+		info = UpdateInfo();
+
+
+		selectableButtons[btnIndex] = (button.Item1, newValue);
+	}
+
+	private string UpdateInfo()
+	{
+		int maxFavs = 5;
+		int remainingFavs = maxFavs - favorite;
+		int remainingTop = 1 - topfavorite;
+
+		string infoText = $"Offen: {remainingFavs} Favoriten, {remainingTop} Topfavorit";
+
+		fehlerMeldung = remainingFavs == 0 ? "Maximal 5 Favoriten sind erlaubt." : "";
+
+		return infoText;
+	}
+
+	private void SubmitVote()
+	{
+		
+	}
+
+	private void CheckAdmin()
+	{
+		if (adminPassword == "ayri") isAdmin = true;
+		else isAdmin = false;
+	}
+	private void LogoutAdmin()
+	{
+		isAdmin = false;
+	}
+	private void StartVoting()
+	{
+
+	}
+	private void StopVoting() { }
+    private void ResetVotes() { }
+	private void ClearLocalVote() { }
+	private void ChangePassword() { }
+	private void ExportExcel() { }
 }
