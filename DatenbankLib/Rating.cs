@@ -44,5 +44,31 @@
             return count;
         }
 
+        public static string AddRanking(Rating[] ratings)
+        {
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+            string errorMessage = $"Erfolgreich eingefügt: {ratings.Count()}";
+            string sql;
+            int errorCount = 0;
+            foreach (Rating rating in ratings)
+            {
+                sql = $"INSERT INTO friendsOfAward_Ranking(TopFavorit, Favorit1, Favorit2, Favorit3, Favorit4, Favorit5) VALUES ('{rating.TopFavorit}','{rating.Favorit1}','{rating.Favorit2}','{rating.Favorit3}','{rating.Favorit4}','{rating.Favorit5}');";
+                try
+                {
+                    wrappr.RunNonQuery(sql);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    errorCount++;
+                }
+            }
+            if (errorCount > 0)
+            {
+                errorMessage = $"Fehler beim Einfügen von {errorCount} Einträgen.";
+            }
+            return errorMessage;
+        }
+
     }
 }
