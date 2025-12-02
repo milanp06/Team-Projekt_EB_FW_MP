@@ -4,7 +4,7 @@
 <h1>Friends Of Award</h1>
 
 <div class="legend-box">
-	<p>Geben Sie uns Ihre persönlichen Favoriten bekannt!</p>
+	<p>Geben Sie uns Ihre persönlichen countFavoritenn bekannt!</p>
 	<p>
 		Einfacher Klick = Favorit (max. 5)<br />
 		Doppelklick = Topfavorit (max. 1)
@@ -22,8 +22,8 @@
 	}
 </div>
 <div class="message">@info</div>
-<div class="message" style="color:red">@fehlerMeldung</div>
-<p><button class="submitBtn" disabled="@(favorite == 5 && topfavorite == 1 ? true : false)" @onclick="SubmitVote">Bewertung absenden</button></p>
+<div class="message" style="color: @(hasVoted ? "green" : "red")">@fehlerMeldung</div>
+<p><button class="submitBtn" disabled="@(submitBtn == false ? true : false)" @onclick="SubmitVote">Bewertung absenden</button></p>
 
 <div class="adminToggle" @onclick="@(() => { adminLogin = !adminLogin; })">🏠</div>
 <div class="adminPanel" style="display: @(adminLogin ? "block" : "none");">
@@ -40,7 +40,7 @@
 		<button @onclick="ClearLocalVote">Neue Abstimmung auf diesem Gerät erlauben</button>
 		<button @onclick="ChangePassword">Passwort ändern</button>
 		<button @onclick="ExportExcel">Excel exportieren</button>
-		<div id="adminStatus" style="margin-top:10px; color:blue;"></div>
+		<div id="adminStatus" style="margin-top:10px; color:blue;">@adminMsg</div>
 		<table id="summaryTable">
 			<thead>
 				<tr>
@@ -58,15 +58,42 @@
 
 @code {
 	List<(string, int)> selectableButtons = new();
-	private int favorite = new();
-	private List<int> favoriteList = new();
-	private int topfavorite = 0;
+
+	private int countFavoriten = new();
+	private List<int> favoritenList = new();
+	private int countTopFavorit = 0;
+	private int topFavorit = -1;
+
 	private string info = "Offen 5 Favoriten, 1 Topfavorit";
 	private string fehlerMeldung = "";
+
 	private string adminPassword = "";
 	private bool adminLogin = false;
 	private bool isAdmin = false;
+	private string adminMsg = "";
+
 	private bool enableVoting = false;
+	private bool votingActive = false;
+	private bool submitBtn = false;
+
+	private bool hasVoted = false;
+
+	Results results;
+
+	public class Results
+	{
+
+		List<int> Favoriten { get; set; } = new();
+		int TopFavorit { get; set; } = -1;
+		TimeOnly Time { get; set; }
+
+		public Results(List<int> favoriten, int topFavorit, TimeOnly time)
+		{
+			Favoriten = favoriten;
+			TopFavorit = topFavorit;
+			Time = time;
+		}
+	}
 
 	protected override Task OnInitializedAsync()
 	{
@@ -75,7 +102,7 @@
 			selectableButtons.Add(($"selectedButton{i + 1}", 0));
 		}
 
-        EnableVoting();
+		EnableVoting();
 
 		return base.OnInitializedAsync();
 	}
@@ -84,37 +111,40 @@
 	private void EnableVoting()
 	{
 		enableVoting = true;
+		submitBtn = false;
 	}
 
 	private void DisableVoting()
 	{
 		enableVoting = false;
+		submitBtn = false;
 	}
 
 	private void HandleClick(int btnIndex)
 	{
 		var button = selectableButtons[btnIndex];
 		int newValue = 0;
-		if (favorite <= 4)
+		if (countFavoriten <= 4)
 		{
 			if (button.Item2 == 0)
 			{
 				newValue++;
-				favorite++;
-				favoriteList.Add(btnIndex+1);
+				countFavoriten++;
+				favoritenList.Add(btnIndex+1);
 			}
 		}
 
 		if (button.Item2 == 1)
 		{
 			newValue = 0;
-			favorite--;
-			favoriteList.Remove(btnIndex + 1);
+			countFavoriten--;
+			favoritenList.Remove(btnIndex + 1);
 		}
 		if (button.Item2 == 2)
 		{
 			newValue = 0;
-			topfavorite--;
+			countTopFavorit--;
+			topFavorit = -1;
 		}
 
 		info = UpdateInfo();
@@ -126,24 +156,28 @@
 	{
 		var button = selectableButtons[btnIndex];
 		int newValue = 0;
-		if (topfavorite == 0)
+		if (countTopFavorit == 0)
 		{
 			if (button.Item2 == 0)
 			{
 				newValue = 2;
-				topfavorite++;
+				countTopFavorit++;
+				topFavorit = btnIndex + 1;
 			}
 			else if (button.Item2 == 1)
 			{
 				newValue = 2;
-				favorite--;
-				topfavorite++;
+				countFavoriten--;
+				favoritenList.Remove(btnIndex + 1);
+				countTopFavorit++;
+				topFavorit = btnIndex+1;
 			}
 		}
 		if (button.Item2 == 2)
 		{
 			newValue = 0;
-			topfavorite--;
+			countTopFavorit--;
+			topFavorit = -1;
 		}
 
 		info = UpdateInfo();
@@ -155,11 +189,13 @@
 	private string UpdateInfo()
 	{
 		int maxFavs = 5;
-		int remainingFavs = maxFavs - favorite;
-		int remainingTop = 1 - topfavorite;
+		int remainingFavs = maxFavs - countFavoriten;
+		int remainingTop = 1 - countTopFavorit;
 
 		string infoText = $"Offen: {remainingFavs} Favoriten, {remainingTop} Topfavorit";
 
+		if (remainingFavs == 0 && remainingTop == 0) submitBtn = true;
+		else submitBtn = false;
 		fehlerMeldung = remainingFavs == 0 ? "Maximal 5 Favoriten sind erlaubt." : "";
 
 		return infoText;
@@ -167,7 +203,17 @@
 
 	private void SubmitVote()
 	{
-		
+		if (submitBtn == false) return;
+		results = new(
+			favoritenList,
+			topFavorit,
+			TimeOnly.FromDateTime(DateTime.Now)
+		);
+		hasVoted = true;
+		DisableVoting();
+		info = "";
+		fehlerMeldung = "Danke für Ihre Bewertung!";
+		RenderSummary();
 	}
 
 	private void CheckAdmin()
@@ -181,11 +227,24 @@
 	}
 	private void StartVoting()
 	{
-
+		votingActive = true;
+		adminMsg = "Abstimmung wurde gestartet.";
 	}
-	private void StopVoting() { }
-    private void ResetVotes() { }
+	private void StopVoting()
+	{
+		votingActive = false;
+		adminMsg = "Abstimmung wurde gestoppt.";
+	}
+
 	private void ClearLocalVote() { }
-	private void ChangePassword() { }
+	private void ResetVotes() { }
+	private void ChangePassword()
+	{
+		Console.Write("Neues Admin-Passwort eingeben:");
+		string input = Console.ReadLine();
+		adminPassword = input;
+		adminMsg = "Passwort wurde geändert.";
+	}
 	private void ExportExcel() { }
+	private void RenderSummary() { }
 }
