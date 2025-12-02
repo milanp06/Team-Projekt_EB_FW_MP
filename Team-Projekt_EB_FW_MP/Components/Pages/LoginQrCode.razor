@@ -1,0 +1,43 @@
+﻿@page "/login/{Token}"
+@inject NavigationManager NavManager
+@inject MyCustomAuthStateProvider AuthProvider
+
+@* <p>@Message</p> *@
+tets
+@code {
+    // [Parameter]
+    public string Token { get; set; } = "0561c52b-4007-48d5-8e9e-d97181cedc81";
+
+    // private string Message = "";
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     if (string.IsNullOrEmpty(Token))
+    //     {
+    //         Message = "Kein Token angegeben!";
+    //         return;
+    //     }
+
+    //     var qrToken = await DbContext.QrTokens.FirstOrDefaultAsync(t => t.Token == Token);
+
+    //     if (qrToken == null)
+    //     {
+    //         Message = "Ungültiger QR-Code!";
+    //     }
+    //     else if (qrToken.Used)
+    //     {
+    //         Message = "Dieser QR-Code wurde bereits verwendet!";
+    //     }
+    //     else
+    //     {
+    //         qrToken.Used = true;
+    //         await DbContext.SaveChangesAsync();
+
+    //         // Als Benutzer einloggen (Token als Name)
+    //         AuthProvider.Login(Token);
+
+    //         // Optional: Admin- oder Home-Seite weiterleiten
+    //         NavManager.NavigateTo("/");
+    //     }
+    // }
+}
