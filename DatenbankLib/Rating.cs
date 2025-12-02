@@ -1,4 +1,6 @@
-﻿namespace DatenbankLib
+﻿using System.Data;
+
+namespace DatenbankLib
 {
     internal class Rating
     {
@@ -69,6 +71,23 @@
             }
             return errorMessage;
         }
+        public static List<Rating> GetAllRatings()
+        {
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+            string sql = "SELECT * FROM friendsOfAward_Ranking;";
+            DataTable eventTable = new DataTable();
 
+            Rating rating = new Rating(0, "", "", "", "", "", "");
+            List<Rating> ratings = new List<Rating>();
+            eventTable = wrappr.RunQuery(sql);
+
+            foreach (DataRow row in eventTable.Rows)
+            {
+
+                rating = new Rating((int) row[0],(string)row[1], (string)row[2], (string)row[3], (string)row[4], (string)row[5], (string)row[6]);
+                ratings.Add(rating);
+            }
+            return ratings;
+        }
     }
 }
