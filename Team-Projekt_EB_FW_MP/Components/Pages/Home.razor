@@ -16,7 +16,7 @@
 	@foreach(int index in Enumerable.Range(0, selectableButtons.Count))
 	{
 		var selectableButton = selectableButtons[index];
-		<button disabled="@(enableVoting ? true : false)" @ondblclick="() => HandleDblClick(index)" @onclick="() => HandleClick(index)" 
+		<button disabled="@(enableVoting ? false : true)" @ondblclick="() => HandleDblClick(index)" @onclick="() => HandleClick(index)" 
 		class="@(selectableButton.Item2 == 1 ? "favorit" : selectableButton.Item2 == 2 ? "topfavorit" : "")">
 		@(index+1)</button>
 	}
@@ -75,7 +75,20 @@
 			selectableButtons.Add(($"selectedButton{i + 1}", 0));
 		}
 
+        EnableVoting();
+
 		return base.OnInitializedAsync();
+	}
+
+
+	private void EnableVoting()
+	{
+		enableVoting = true;
+	}
+
+	private void DisableVoting()
+	{
+		enableVoting = false;
 	}
 
 	private void HandleClick(int btnIndex)

@@ -59,26 +59,26 @@ h1 {
     transform: scale(0.95);
 }
 
-.favorit {
+.buttonGrid .favorit {
     background-color: #4CAF50;
     color: white;
     position: relative;
 }
 
-.favorit::after {
+.buttonGrid .favorit::after {
     content: "⭐";
     position: absolute;
     top: 5px;
     right: 10px;
 }
 
-.topfavorit {
+.buttonGrid .topfavorit {
     background-color: orange;
     color: white;
     position: relative;
 }
 
-.topfavorit::after {
+.buttonGrid .topfavorit::after {
     content: "⭐⭐";
     position: absolute;
     top: 5px;
