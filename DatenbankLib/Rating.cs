@@ -2,7 +2,7 @@
 
 namespace DatenbankLib
 {
-    internal class Rating
+    public class Rating
     {
         // Merkmale 
         private static string table_friendsOfAward_Ranking = "friendsOfAward_Ranking";
@@ -26,6 +26,12 @@ namespace DatenbankLib
             Favorit4 = favorit4;
             Favorit5 = favorit5;
         }
+
+        public override string? ToString()
+        {
+            return TopFavorit + " " + Favorit1 + " " + Favorit2 + " " + Favorit3 + " " + Favorit4 + " " + Favorit5;
+        }
+
         public static int DeleteAllRatings()
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
@@ -46,24 +52,21 @@ namespace DatenbankLib
             return count;
         }
 
-        public static string AddRanking(Rating[] ratings)
+        public static string AddRanking(Rating rating)
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
-            string errorMessage = $"Erfolgreich eingefügt: {ratings.Count()}";
+            string errorMessage = $"Erfolgreich eingefügt: {rating}";
             string sql;
             int errorCount = 0;
-            foreach (Rating rating in ratings)
+            sql = $"INSERT INTO friendsOfAward_Ranking(TopFavorit, Favorit1, Favorit2, Favorit3, Favorit4, Favorit5) VALUES ('{rating.TopFavorit}','{rating.Favorit1}','{rating.Favorit2}','{rating.Favorit3}','{rating.Favorit4}','{rating.Favorit5}');";
+            try
             {
-                sql = $"INSERT INTO friendsOfAward_Ranking(TopFavorit, Favorit1, Favorit2, Favorit3, Favorit4, Favorit5) VALUES ('{rating.TopFavorit}','{rating.Favorit1}','{rating.Favorit2}','{rating.Favorit3}','{rating.Favorit4}','{rating.Favorit5}');";
-                try
-                {
-                    wrappr.RunNonQuery(sql);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    errorCount++;
-                }
+                wrappr.RunNonQuery(sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                errorCount++;
             }
             if (errorCount > 0)
             {
