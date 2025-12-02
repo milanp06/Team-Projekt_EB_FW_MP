@@ -7,36 +7,33 @@
 <PageTitle>Login</PageTitle>
 
 <h1>Login</h1>
-<input @bind="username" placeholder="Benutzername" />
+
+<input @bind="email" placeholder="E-Mail" />
 <input @bind="password" placeholder="Passwort" type="password" />
 <button @onclick="HandleLogin">Login</button>
+
 <p style="color: red">@message</p>
 
-
-
 @code {
-	string username = "";
-	string password = "";
-	string message = "";
+    string email = "";
+    string password = "";
+    string message = "";
 
-	void HandleLogin()
-	{
-		if (IsValidUser(username, password))
-		{
-			MyAuthProvider.Login(username);
-			MyNavMgr.NavigateTo("/Home");
-		}
-		else
-		{
-			message = "Login fehlgeschlagen.";
-		}
-	}
+    void HandleLogin()
+    {
+        if (IsValidUser(email, password))
+        {
+            MyAuthProvider.Login(email);
+            MyNavMgr.NavigateTo("/Home");
+        }
+        else
+        {
+            message = "Login fehlgeschlagen.";
+        }
+    }
 
-	bool IsValidUser(string username, string password)
-	{
-		// Hier echte Validierung gegen eine Datenbank oder einen anderen Dienst durchführen
-		return true;
-	}					
-
-
+    bool IsValidUser(string email, string password)
+    {
+        return DatenbankLib.Admin.CheckAdminLogin(email, password);
+    }
 }

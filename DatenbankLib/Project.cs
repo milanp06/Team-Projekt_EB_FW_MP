@@ -24,7 +24,7 @@ namespace DatenbankLib
 		{
 			DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
 
-            string sql = "DELETE FROM friendsOfAward_Projects;";
+            string sql = $"DELETE FROM {table_friendsOfAward_Projects};";
             int count = 0;
 
 			try
@@ -50,7 +50,7 @@ namespace DatenbankLib
 
             foreach (Project project in projects)
             {
-				sql = $"INSERT INTO friendsOfAward_Projects(Title, Author) VALUES ('{project.Title}','{project.Author}');";
+				sql = $"INSERT INTO {table_friendsOfAward_Projects}(Title, Author) VALUES ('{project.Title}','{project.Author}');";
 				try
                 {
                     wrappr.RunNonQuery(sql);
