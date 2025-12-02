@@ -16,7 +16,7 @@
 	@foreach(int index in Enumerable.Range(0, selectableButtons.Count))
 	{
 		var selectableButton = selectableButtons[index];
-		<button @ondblclick="() => HandleDblClick(index)" @onclick="() => HandleClick(index)" 
+		<button disabled="@(enableVoting ? true : false)" @ondblclick="() => HandleDblClick(index)" @onclick="() => HandleClick(index)" 
 		class="@(selectableButton.Item2 == 1 ? "favorit" : selectableButton.Item2 == 2 ? "topfavorit" : "")">
 		@(index+1)</button>
 	}
@@ -58,13 +58,15 @@
 
 @code {
 	List<(string, int)> selectableButtons = new();
-	private List<string, int> favorite = new();
+	private int favorite = new();
+	private List<int> favoriteList = new();
 	private int topfavorite = 0;
 	private string info = "Offen 5 Favoriten, 1 Topfavorit";
 	private string fehlerMeldung = "";
 	private string adminPassword = "";
 	private bool adminLogin = false;
 	private bool isAdmin = false;
+	private bool enableVoting = false;
 
 	protected override Task OnInitializedAsync()
 	{
@@ -86,7 +88,7 @@
 			{
 				newValue++;
 				favorite++;
-				favorite.Add((button.Item1, 1));
+				favoriteList.Add(btnIndex+1);
 			}
 		}
 
@@ -94,7 +96,7 @@
 		{
 			newValue = 0;
 			favorite--;
-			favorite.Remove((button.Item1, 0));
+			favoriteList.Remove(btnIndex + 1);
 		}
 		if (button.Item2 == 2)
 		{
@@ -122,7 +124,6 @@
 			{
 				newValue = 2;
 				favorite--;
-				favorite.Remove((button.Item1, 0));
 				topfavorite++;
 			}
 		}
