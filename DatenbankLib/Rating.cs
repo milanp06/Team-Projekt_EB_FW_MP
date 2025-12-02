@@ -24,5 +24,25 @@
             Favorit4 = favorit4;
             Favorit5 = favorit5;
         }
+        public static int DeleteAllRatings()
+        {
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+
+            string sql = "DELETE FROM friendsOfAward_ranking;";
+            int count = 0;
+
+            try
+            {
+                count = wrappr.RunNonQuery(sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                count = -1;
+            }
+
+            return count;
+        }
+
     }
 }
