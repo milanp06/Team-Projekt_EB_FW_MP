@@ -1,5 +1,6 @@
 ﻿@page "/Home"
 @rendermode InteractiveServer
+@inject IJSRuntime JsRuntime
 
 <h1>Friends Of Award</h1>
 
@@ -29,10 +30,11 @@
 <div class="adminPanel" style="display: @(adminLogin ? "block" : "none");">
 	<h2>Admin Panel</h2>
 	<div>
-		<input type="password" @bind="adminPassword" />
+		<input type="password" @bind="enteredPassword" />
         <button @onclick="CheckAdmin">Login</button>
         <button @onclick="LogoutAdmin">Logout</button>
 	</div>
+	<label style="color: red;">@loginMsg</label>
 	<div id="adminControls" style="display: @(isAdmin ? "block" : "none");">
 		<button @onclick="StartVoting">Abstimmung starten</button>
 		<button @onclick="StopVoting">Abstimmung stoppen</button>
@@ -50,7 +52,8 @@
 					<th>Punkte</th>
 				</tr>
 			</thead>
-			<tbody></tbody>
+			<tbody>
+			</tbody>
 		</table>
 	</div>
 </div>
@@ -67,9 +70,11 @@
 	private string info = "Offen 5 Favoriten, 1 Topfavorit";
 	private string fehlerMeldung = "";
 
-	private string adminPassword = "";
+	private string adminPassword = "Ayri";
+	private string enteredPassword = "";
 	private bool adminLogin = false;
 	private bool isAdmin = false;
+	private string loginMsg = "";
 	private string adminMsg = "";
 
 	private bool enableVoting = false;
@@ -78,22 +83,21 @@
 
 	private bool hasVoted = false;
 
-	Results results;
 
-	public class Results
+	public class ResultEntry
 	{
-
-		List<int> Favoriten { get; set; } = new();
-		int TopFavorit { get; set; } = -1;
-		TimeOnly Time { get; set; }
-
-		public Results(List<int> favoriten, int topFavorit, TimeOnly time)
+		public ResultEntry(List<int> favoriten, int topfavorit)
 		{
 			Favoriten = favoriten;
-			TopFavorit = topFavorit;
-			Time = time;
+			Topfavorit = topfavorit;
 		}
+
+		public List<int> Favoriten { get; set; }
+		public int? Topfavorit { get; set; }
+
 	}
+
+	private List<ResultEntry> resultEntry = new();
 
 	protected override Task OnInitializedAsync()
 	{
@@ -204,47 +208,107 @@
 	private void SubmitVote()
 	{
 		if (submitBtn == false) return;
-		results = new(
-			favoritenList,
-			topFavorit,
-			TimeOnly.FromDateTime(DateTime.Now)
-		);
+		resultEntry.Add(new(favoritenList, topFavorit));
 		hasVoted = true;
 		DisableVoting();
 		info = "";
 		fehlerMeldung = "Danke für Ihre Bewertung!";
-		RenderSummary();
+		RenderSummary(resultEntry);
 	}
 
 	private void CheckAdmin()
 	{
-		if (adminPassword == "ayri") isAdmin = true;
-		else isAdmin = false;
+		if (enteredPassword == adminPassword) 
+		{
+			isAdmin = true;
+			loginMsg = "";
+		}
+		else 
+		{
+			isAdmin = false;
+			loginMsg = "Falsches Passwort.";
+		}
 	}
-	private void LogoutAdmin()
+
+	private void LogoutAdmin()	
 	{
 		isAdmin = false;
 	}
+
 	private void StartVoting()
 	{
 		votingActive = true;
 		adminMsg = "Abstimmung wurde gestartet.";
 	}
+
 	private void StopVoting()
 	{
 		votingActive = false;
 		adminMsg = "Abstimmung wurde gestoppt.";
 	}
 
-	private void ClearLocalVote() { }
-	private void ResetVotes() { }
-	private void ChangePassword()
+	private void ClearLocalVote()
 	{
-		Console.Write("Neues Admin-Passwort eingeben:");
-		string input = Console.ReadLine();
-		adminPassword = input;
-		adminMsg = "Passwort wurde geändert.";
+		hasVoted = false;
+		EnableVoting();
+		adminMsg = "Dieses Gerät darf erneut abstimmen.";
+
 	}
+
+	private async Task ResetVotes()
+	{
+		bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Alle Bewertungen löschen?");
+		if (confirmed)
+		{
+			resultEntry = new();
+			RenderSummary(resultEntry);
+			adminMsg = "Alle Bewertungen wurden gelöscht.";
+		}
+	}
+
+	private async Task ChangePassword()
+	{
+		string? input = await JsRuntime.InvokeAsync<string>(
+			"showPrompt",
+			"Bitte gib einen Text ein:",
+			""
+		);
+
+		if (input != null)
+		{
+			adminPassword = input;
+			adminMsg = "Passwort wurde geändert.";
+		}
+		else
+		{
+			adminMsg = "Passwortänderung abgebrochen.";
+		}
+	}
+
 	private void ExportExcel() { }
-	private void RenderSummary() { }
+	private void RenderSummary(List<ResultEntry> resEntry)
+	{
+		int[] favoritenCount = new int[20];
+		int[] topfavoritenCount = new int[20];
+
+		foreach (var entry in resEntry)
+		{
+			foreach(var i in entry.Favoriten)
+			{
+				favoritenCount[i - 1]++;
+			}
+
+			if (entry.Topfavorit.HasValue)
+			{
+				topfavoritenCount[entry.Topfavorit.Value - 1]++;
+			}
+		}
+
+		Console.WriteLine("Nr | Favoriten | Topfavoriten | Punkte");
+		for (int i = 0; i < 20; i++)
+		{
+			int punkte = favoritenCount[i] + topfavoritenCount[i] * 2;
+			Console.WriteLine($"{i + 1,2} | {favoritenCount[i],9} | {topfavoritenCount[i],12} | {punkte,6}");
+		}
+	}
 }
