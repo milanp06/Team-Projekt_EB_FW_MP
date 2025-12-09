@@ -4,26 +4,38 @@
 @inject MyCustomAuthStateProvider MyAuthProvider
 @inject NavigationManager MyNavMgr
 
-<PageTitle>Login</PageTitle>
+<div class="login-container">
+    <div class="login-card text-center">
+        <img src="images/logo.png" alt="Logo" class="login-logo mb-4" />
 
-<h1>Login</h1>
+        <h1 class="mb-4">FriendsOfAward</h1>
 
-<input @bind="email" placeholder="E-Mail" />
-<input @bind="password" placeholder="Passwort" type="password" />
-<button @onclick="HandleLogin">Login</button>
+        <div class="form-group">
+            <label for="username">Benutzername</label>
+            <input id="username" class="form-control form-control-lg" @bind="username" />
+        </div>
 
-<p style="color: red">@message</p>
+        <div class="form-group">
+            <label for="password">Passwort</label>
+            <input id="password" type="password" class="form-control form-control-lg" @bind="password" />
+        </div>
+
+        <button class="btn btn-primary btn-lg w-100 btn-hover" @onclick="HandleLogin">Anmelden</button>
+
+        <p style="color: red">@message</p>
+    </div>
+</div>
 
 @code {
-    string email = "";
+    string username = "";
     string password = "";
     string message = "";
 
     void HandleLogin()
     {
-        if (IsValidUser(email, password))
+        if (IsValidUser(username, password))
         {
-            MyAuthProvider.Login(email);
+            MyAuthProvider.Login(username);
             MyNavMgr.NavigateTo("/admin");
         }
         else
@@ -32,8 +44,8 @@
         }
     }
 
-    bool IsValidUser(string email, string password)
+    bool IsValidUser(string username, string password)
     {
-        return DatenbankLib.Admin.CheckAdminLogin(email, password);
+        return DatenbankLib.Admin.CheckAdminLogin(username, password);
     }
 }

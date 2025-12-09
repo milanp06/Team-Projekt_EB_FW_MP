@@ -1,0 +1,82 @@
+﻿/* Container füllt gesamten Bildschirm und zentriert die Card */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+/* Card nimmt jetzt einen großen Teil des Bildschirms ein */
+.login-card {
+    width: 80%; /* 80% der Bildschirmbreite */
+    max-width: 750px; /* maximal 700px auf großen Bildschirmen */
+    height: 80vh; /* 80% der Bildschirmhöhe */
+    max-height: 500px; /* maximal 700px auf großen Bildschirmen */
+    background-color: white;
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Inhalte vertikal mittig in der Card */
+    align-items: center; /* horizontal */
+}
+
+/* Logo */
+.login-logo {
+    width: 450px; /* großes Logo */
+    height: auto;
+    margin: 0 auto;
+}
+
+/* Button Hover-Effekt */
+.btn-hover {
+    width: 200px; /* kürzer als volle Breite */
+    background-color: #5bc0f8; /* hellblau */
+    color: white; /* weiße Schrift */
+    font-weight: bold; /* fett */
+    border-radius: 25px; /* abgerundet */
+    padding: 0.6rem 1.5rem; /* schöner Padding */
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+    .btn-hover:hover {
+        background-color: #39a0f0; /* etwas dunkler beim Hover */
+        transform: translateY(-2px);
+    }
+
+/* Responsive Anpassung */
+@media (max-width: 768px) {
+    .login-card {
+        width: 90%;
+        height: auto; /* Höhe anpassen auf kleineren Bildschirmen */
+        padding: 2rem;
+    }
+
+    .login-logo {
+        width: 140px;
+    }
+}
+
+.login-card .form-group {
+    display: flex;
+    align-items: center; /* vertikal zentriert */
+    justify-content: space-between; /* Abstand zwischen Label und Input */
+    margin-bottom: 10px;
+}
+
+    .login-card .form-group label {
+        width: 120px; /* feste Breite für Labels, gleich bei allen */
+        text-align: right; /* Label rechtsbündig neben Input */
+        margin-right: 15px; /* Abstand zum Input */
+    }
+
+    .login-card .form-group input {
+        flex: 1; /* Input nimmt restliche Breite ein */
+        max-width: 250px; /* optional maximale Breite */
+    }

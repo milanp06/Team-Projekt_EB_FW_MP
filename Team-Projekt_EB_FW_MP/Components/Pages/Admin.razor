@@ -16,11 +16,17 @@
     {
         var token = Guid.NewGuid().ToString();
 
+        Console.WriteLine(token);
+
         // Token in DB speichern
-        var qrToken = new QrToken { Token = token };
+        var qrToken = new QrToken(token, false);
+
+        DatenbankLib.QrToken.AddQrToken(qrToken);
 
         // QR-Code-Text = URL mit Token
-        var qrUrl = $"http://localhost:5073/{token}";
+        //var qrUrl = $"http://localhost:5432/login/{token}";
+        //var qrUrl = $" http://10.137.192.6:5432/login/{token}";
+        var qrUrl = $" http://172.17.10.70:5432/login/{token}";
 
         // QR generieren
         using var qrGenerator = new QRCoder.QRCodeGenerator();
@@ -32,13 +38,4 @@
         bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
         QrCodeBase64 = $"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}";
     }
-
-    public class QrToken
-    {
-        public int Id { get; set; }
-        public string Token { get; set; } = string.Empty;
-        public bool Used { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    }
-
 }

@@ -57,36 +57,5 @@ namespace DatenbankLib
                 return false;
             }
         }
-
-        public static string AddProjects(Project[] projects)
-        {
-            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
-
-            string errorMessage = $"Erfolgreich eingefügt: {projects.Count()}";
-            string sql;
-            int errorCount = 0;
-
-            foreach (Project project in projects)
-            {
-                sql = $"INSERT INTO friendsOfAward_Projects(Title, Author) VALUES ('{project.Title}','{project.Author}');";
-                try
-                {
-                    wrappr.RunNonQuery(sql);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    errorCount++;
-                }
-            }
-
-            if (errorCount > 0)
-            {
-                errorMessage = $"Erfolgreich eingefügt: {projects.Count() - errorCount} / Fehler: {errorCount}";
-            }
-
-            return errorMessage;
-        }
-
     }
 }
