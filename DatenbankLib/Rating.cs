@@ -87,7 +87,7 @@ namespace DatenbankLib
             foreach (DataRow row in eventTable.Rows)
             {
 
-                rating = new Rating((int) row[0],(string)row[1], (string)row[2], (string)row[3], (string)row[4], (string)row[5], (string)row[6]);
+                rating = new Rating((int)row[0], (string)row[1], (string)row[2], (string)row[3], (string)row[4], (string)row[5], (string)row[6]);
                 ratings.Add(rating);
             }
             return ratings;
@@ -98,8 +98,17 @@ namespace DatenbankLib
             foreach (Rating rating in ratings)
             {
 
+                var punkte = new Dictionary<string, int>();
+
+                for (int i = 0; i < ratings.Count; i++)
+                {
+                    punkte[ratings[i].ToString()] = (i == 0) ? 2 : 1;
+                }
+
+
             }
             return ratings;
         }
     }
 }
+
