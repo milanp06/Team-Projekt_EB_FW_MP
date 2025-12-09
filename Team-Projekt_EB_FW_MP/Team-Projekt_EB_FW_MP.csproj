@@ -16,4 +16,8 @@
     <ProjectReference Include="..\DatenbankLib\DatenbankLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
 </Project>

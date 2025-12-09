@@ -1,18 +1,54 @@
 ﻿@page "/login/{Token}"
-@inject NavigationManager NavManager
+
+@rendermode InteractiveServer
+@inject NavigationManager MyNavMgr
 @inject MyCustomAuthStateProvider AuthProvider
 
-@* <p>@Message</p> *@
-tets
+<div class="login-container">
+    <div class="login-card text-center">
+        <img src="images/logo.png" alt="Logo" class="login-logo mb-4" />
+
+        <h1 class="mb-4">FriendsOfAward</h1>
+
+        <div class="form-group">
+            <label for="username">Benutzername</label>
+            <input id="username" class="form-control form-control-lg" @bind="username" />
+        </div>
+
+        <div class="form-group">
+            <label for="password">Passwort</label>
+            <input id="password" type="password" class="form-control form-control-lg" @bind="password" />
+        </div>
+
+        <button class="btn btn-primary btn-lg w-100 btn-hover" @onclick="HandleLogin">Anmelden</button>
+
+        <p style="color: red">@message</p>
+    </div>
+</div>
+
 @code {
-    // [Parameter]
-    public string Token { get; set; } = "0561c52b-4007-48d5-8e9e-d97181cedc81";
+    [Parameter]
+    public string Token { get; set; } = "";
 
-    // private string Message = "";
+    string username = "";
+    string password = "";
+    string message = "";
 
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     if (string.IsNullOrEmpty(Token))
+    protected override async Task OnInitializedAsync()
+    {
+        if (QrToken.CheckTokenExits(Token) == false)
+        {
+            message = "Token existiert nicht";
+        }
+        else if (QrToken.CheckTokenUsed(Token) == true)
+        {
+            message = "Token schon verwendet ";
+        }
+        else
+        {
+            MyNavMgr.NavigateTo("/Home");
+        }
+        //     if (string.IsNullOrEmpty(Token))
     //     {
     //         Message = "Kein Token angegeben!";
     //         return;
@@ -33,11 +69,18 @@ tets
     //         qrToken.Used = true;
     //         await DbContext.SaveChangesAsync();
 
-    //         // Als Benutzer einloggen (Token als Name)
+    //         Als Benutzer einloggen (Token als Name)
     //         AuthProvider.Login(Token);
 
-    //         // Optional: Admin- oder Home-Seite weiterleiten
+    //         Optional: Admin- oder Home-Seite weiterleiten
     //         NavManager.NavigateTo("/");
     //     }
-    // }
+    }
+
+    void HandleLogin()
+    {
+
+            MyNavMgr.NavigateTo("/Home");
+    }
+
 }
