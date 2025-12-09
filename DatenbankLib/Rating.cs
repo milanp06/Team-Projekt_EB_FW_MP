@@ -92,5 +92,14 @@ namespace DatenbankLib
             }
             return ratings;
         }
+        public static List<Rating> Evaluation()
+        {
+            List<Rating> ratings = GetAllRatings();
+            foreach (Rating rating in ratings)
+            {
+
+            }
+            return ratings;
+        }
     }
 }
