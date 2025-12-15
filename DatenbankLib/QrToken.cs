@@ -64,22 +64,17 @@ namespace DatenbankLib
             DataTable dt = new();
 
             string sql = $"SELECT TokenUsed FROM friendsOfAward_User WHERE token = '{token}' LIMIT 1;";
-
+            
             try
             {
                 dt = wrappr.RunQuery(sql);
-                foreach (DataRow dr in dt.Rows)
-                {
-                    if (dr[0].ToString() == "1") return true;
-                }
+                return (bool)dt.Rows[0][0];
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 return false;
             }
-
-            return true;
         }
     }
 }

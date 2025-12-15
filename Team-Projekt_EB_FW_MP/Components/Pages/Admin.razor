@@ -9,6 +9,8 @@
     <img src="@QrCodeBase64" />
 }
 
+<button @onclick="Test">Test</button>
+
 @code {
     private string QrCodeBase64 = "";
 
@@ -25,8 +27,9 @@
 
         // QR-Code-Text = URL mit Token
         //var qrUrl = $"http://localhost:5432/login/{token}";
-        //var qrUrl = $" http://10.137.192.6:5432/login/{token}";
-        var qrUrl = $" http://172.17.10.70:5432/login/{token}";
+        //var qrUrl = $" http://10.137.192.6:5432/login/{token}"; //Hotspot
+        var qrUrl = $" http://172.17.10.54:5432/login/{token}"; //Schule PC: E2C14
+        //var qrUrl = $" http://192.168.178.49:5432/login/{token}";   //Home
 
         // QR generieren
         using var qrGenerator = new QRCoder.QRCodeGenerator();
@@ -37,5 +40,23 @@
         using var ms = new MemoryStream();
         bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
         QrCodeBase64 = $"data:image/png;base64,{Convert.ToBase64String(ms.ToArray())}";
+    }
+
+    private void Test()
+    {
+        // OpenFileDialog ofd = new OpenFileDialog();
+        // ofd.Filter = "CSV-Datei|*.csv|Textdatei|*.txt|AnyFile|*.any";
+        // ofd.Title = "Eine TXT, CSV oder ANY Datei auswählen";
+        // ofd.InitialDirectory = Application.StartupPath;
+
+        // DialogResult result = ofd.ShowDialog();
+        // if (result == DialogResult.OK)
+        // {
+        //     string fileName = ofd.FileName;
+        //     txtFileName.Text = fileName;
+        //     txtText.Text = File.ReadAllText(fileName);
+        //     originalText = txtText.Text;
+        //     MessageBox.Show("file loaded");
+        // }
     }
 }
