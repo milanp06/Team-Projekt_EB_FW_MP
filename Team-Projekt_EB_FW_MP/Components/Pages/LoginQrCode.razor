@@ -2,25 +2,13 @@
 
 @rendermode InteractiveServer
 @inject NavigationManager MyNavMgr
-@inject MyCustomAuthStateProvider AuthProvider
+@inject MyCustomAuthStateProvider MyAuthProvider
 
 <div class="login-container">
     <div class="login-card text-center">
         <img src="images/logo.png" alt="Logo" class="login-logo mb-4" />
 
         <h1 class="mb-4">FriendsOfAward</h1>
-
-        <div class="form-group">
-            <label for="username">Benutzername</label>
-            <input id="username" class="form-control form-control-lg" @bind="username" />
-        </div>
-
-        <div class="form-group">
-            <label for="password">Passwort</label>
-            <input id="password" type="password" class="form-control form-control-lg" @bind="password" />
-        </div>
-
-        <button class="btn btn-primary btn-lg w-100 btn-hover" @onclick="HandleLogin">Anmelden</button>
 
         <p style="color: red">@message</p>
     </div>
@@ -30,8 +18,6 @@
     [Parameter]
     public string Token { get; set; } = "";
 
-    string username = "";
-    string password = "";
     string message = "";
 
     protected override async Task OnInitializedAsync()
@@ -46,41 +32,8 @@
         }
         else
         {
+            MyAuthProvider.Login(Token);
             MyNavMgr.NavigateTo("/Home");
         }
-        //     if (string.IsNullOrEmpty(Token))
-    //     {
-    //         Message = "Kein Token angegeben!";
-    //         return;
-    //     }
-
-    //     var qrToken = await DbContext.QrTokens.FirstOrDefaultAsync(t => t.Token == Token);
-
-    //     if (qrToken == null)
-    //     {
-    //         Message = "Ungültiger QR-Code!";
-    //     }
-    //     else if (qrToken.Used)
-    //     {
-    //         Message = "Dieser QR-Code wurde bereits verwendet!";
-    //     }
-    //     else
-    //     {
-    //         qrToken.Used = true;
-    //         await DbContext.SaveChangesAsync();
-
-    //         Als Benutzer einloggen (Token als Name)
-    //         AuthProvider.Login(Token);
-
-    //         Optional: Admin- oder Home-Seite weiterleiten
-    //         NavManager.NavigateTo("/");
-    //     }
     }
-
-    void HandleLogin()
-    {
-
-            MyNavMgr.NavigateTo("/Home");
-    }
-
 }
