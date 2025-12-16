@@ -97,15 +97,12 @@ namespace DatenbankLib
             List<Rating> ratings = GetAllRatings();
             foreach (Rating rating in ratings)
             {
-
                 var punkte = new Dictionary<string, int>();
 
                 for (int i = 0; i < ratings.Count; i++)
                 {
                     punkte[ratings[i].ToString()] = (i == 0) ? 2 : 1;
                 }
-
-
             }
             return ratings;
         }
