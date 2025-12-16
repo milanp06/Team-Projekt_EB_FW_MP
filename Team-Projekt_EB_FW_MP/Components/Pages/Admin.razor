@@ -1,4 +1,6 @@
 ﻿@page "/admin"
+@using System.Net.NetworkInformation
+@using System.Net.Sockets;
 @rendermode InteractiveServer
 
 <h3>QR-Code Generator</h3>
@@ -25,13 +27,18 @@
 
         DatenbankLib.QrToken.AddQrToken(qrToken);
 
+        //Server-IP
+        string serverIp = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(n =>
+                n.OperationalStatus == OperationalStatus.Up &&
+                n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+            .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+            .First(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
+            .Address
+            .ToString();
+
         // QR-Code-Text = URL mit Token
-        //var qrUrl = $"http://localhost:5432/login/{token}";
-        //var qrUrl = $"http://10.137.192.6:5432/login/{token}"; //Hotspot
-        //var qrUrl = $"http://172.17.10.54:5432/login/{token}"; //Schule PC: E2C14
-        //var qrUrl = $"http://192.168.178.49:5432/login/{token}";   //Home
-        //var qrUrl = $"http://172.17.7.63:5432/login/{token}"; //Schule PC: E1C09
-        var qrUrl = $"http://172.17.10.70:5432/login/{token}"; //Schule PC: M1C02
+        var qrUrl = $"http://{serverIp}:5432/login/{token}";
 
         // QR generieren
         using var qrGenerator = new QRCoder.QRCodeGenerator();
