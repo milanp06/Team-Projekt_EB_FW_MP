@@ -92,19 +92,20 @@ namespace DatenbankLib
             }
             return ratings;
         }
-        public static List<Rating> Evaluation()
+        public static Dictionary<string, int> Evaluation()
         {
             List<Rating> ratings = GetAllRatings();
-            foreach (Rating rating in ratings)
+            var punkte = new Dictionary<string, int> { };
+            foreach (var r in ratings)
             {
-                var punkte = new Dictionary<string, int>();
-
-                for (int i = 0; i < ratings.Count; i++)
-                {
-                    punkte[ratings[i].ToString()] = (i == 0) ? 2 : 1;
-                }
+                punkte.Add(ratings[1].TopFavorit, 2);
+                punkte.Add(ratings[2].Favorit1, 1 );
+                punkte.Add(ratings[3].Favorit2, 1);
+                punkte.Add(ratings[4].Favorit3, 1);
+                punkte.Add(ratings[5].Favorit4, 1);
+                punkte.Add(ratings[6].Favorit5, 1);              
             }
-            return ratings;
+            return punkte;
         }
     }
 }
