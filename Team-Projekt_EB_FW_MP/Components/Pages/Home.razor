@@ -1,6 +1,9 @@
-﻿@page "/Home"
+﻿@page "/Home/{Token}"
 @rendermode InteractiveServer
 @inject IJSRuntime JsRuntime
+@inject MyCustomAuthStateProvider MyAuthProvider
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
 
 <h1>Friends Of Award</h1>
 
@@ -23,7 +26,7 @@
 	}
 </div>
 <div class="message">@info</div>
-<div class="message" style="color: @(hasVoted ? "green" : "red")">@fehlerMeldung</div>
+<div class="message" style="color: @(hasVoted ? "green" : "red"); font-size: 2vh;">@fehlerMeldung</div>
 <p><button class="submitBtn" disabled="@(submitBtn == false ? true : false)" @onclick="SubmitVote">Bewertung absenden</button></p>
 
 <div class="adminToggle" @onclick="@(() => { adminLogin = !adminLogin; })">🏠</div>
@@ -60,6 +63,9 @@
 
 
 @code {
+	[Parameter]
+	public string Token { get; set; } = "";
+
 	List<(string, int)> selectableButtons = new();
 
 	private int countFavoriten = new();
@@ -92,12 +98,11 @@
 
 		public List<int> Favoriten { get; set; }
 		public int? Topfavorit { get; set; }
-
 	}
 
 	private List<ResultEntry> resultEntry = new();
 
-	protected override Task OnInitializedAsync()
+	protected override async Task OnInitializedAsync()
 	{
 		for (int i = 0; i < 20; i++)
 		{
@@ -105,14 +110,24 @@
 		}
 
 		EnableVoting();
-
-		return base.OnInitializedAsync();
 	}
-
 
 	private void EnableVoting()
 	{
-		enableVoting = true;
+		if (QrToken.CheckTokenExits(Token) == false)
+		{
+			info = "";
+			fehlerMeldung = "Token existiert nicht";
+			enableVoting = false;
+		}
+		else if (QrToken.CheckTokenUsed(Token) == true)
+		{
+			info = "";
+			fehlerMeldung = "Token schon verwendet ";
+			enableVoting = false;
+		}
+		else enableVoting = true;
+		
 		submitBtn = false;
 	}
 
@@ -284,6 +299,7 @@
 	}
 
 	private void ExportExcel() { }
+
 	private void RenderSummary(List<ResultEntry> resEntry)
 	{
 		// int[] favoritenCount = new int[20];
@@ -313,5 +329,7 @@
 		Rating currRating = new(0, topFavorit.ToString(), favoritenStr[0], favoritenStr[1], favoritenStr[2], favoritenStr[3], favoritenStr[4]);
 		Console.WriteLine(currRating);
 		Rating.AddRanking(currRating);
+		Console.WriteLine(Token);
+		QrToken.UpdateToken(Token);
 	}
 }
