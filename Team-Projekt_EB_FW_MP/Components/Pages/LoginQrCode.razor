@@ -33,7 +33,7 @@
         else
         {
             MyAuthProvider.Login(Token);
-            MyNavMgr.NavigateTo("/Home");
+            MyNavMgr.NavigateTo($"/Home/{Token}");
         }
     }
 }

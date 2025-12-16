@@ -27,7 +27,7 @@ namespace Team_Projekt_EB_FW_MP
 		}
 
 
-		public void Logout()
+        public void Logout()
 		{
 			_currentUser = null;
 			NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());

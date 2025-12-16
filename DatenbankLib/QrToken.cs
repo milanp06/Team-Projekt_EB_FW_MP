@@ -76,5 +76,23 @@ namespace DatenbankLib
                 return false;
             }
         }
+
+        public static bool UpdateToken(string token)
+        {
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+
+            string sql = $"UPDATE friendsOfAward_User SET TokenUsed = 1 WHERE token = '{token}'";
+
+            try
+            {
+                wrappr.RunNonQuery(sql);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
     }
 }
