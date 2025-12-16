@@ -8,7 +8,7 @@ namespace DatenbankLib
         private static string table_friendsOfAward_Ranking = "friendsOfAward_Ranking";
 
         // Properties
-        private int id { get; }
+        private string Token { get; }
         private string TopFavorit { get; }
         private string Favorit1 { get; }
         private string Favorit2 { get; }
@@ -16,9 +16,9 @@ namespace DatenbankLib
         private string Favorit4 { get; }
         private string Favorit5 { get; }
         // Konstruktor
-        public Rating(int id, string topFavorit, string favorit1, string favorit2, string favorit3, string favorit4, string favorit5)
+        public Rating(string token, string topFavorit, string favorit1, string favorit2, string favorit3, string favorit4, string favorit5)
         {
-            this.id = id;
+            Token = token;
             TopFavorit = topFavorit;
             Favorit1 = favorit1;
             Favorit2 = favorit2;
@@ -80,14 +80,14 @@ namespace DatenbankLib
             string sql = "SELECT * FROM friendsOfAward_Ranking;";
             DataTable eventTable = new DataTable();
 
-            Rating rating = new Rating(0, "", "", "", "", "", "");
+            Rating rating = new Rating("", "", "", "", "", "", "");
             List<Rating> ratings = new List<Rating>();
             eventTable = wrappr.RunQuery(sql);
 
             foreach (DataRow row in eventTable.Rows)
             {
 
-                rating = new Rating((int) row[0],(string)row[1], (string)row[2], (string)row[3], (string)row[4], (string)row[5], (string)row[6]);
+                rating = new Rating((string)row[0],(string)row[1], (string)row[2], (string)row[3], (string)row[4], (string)row[5], (string)row[6]);
                 ratings.Add(rating);
             }
             return ratings;
