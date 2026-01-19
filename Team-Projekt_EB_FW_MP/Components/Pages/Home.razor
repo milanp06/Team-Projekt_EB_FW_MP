@@ -29,38 +29,6 @@
 <div class="message" style="color: @(hasVoted ? "green" : "red"); font-size: 2vh;">@fehlerMeldung</div>
 <p><button class="submitBtn" disabled="@(submitBtn == false ? true : false)" @onclick="SubmitVote">Bewertung absenden</button></p>
 
-<div class="adminToggle" @onclick="@(() => { adminLogin = !adminLogin; })">🏠</div>
-<div class="adminPanel" style="display: @(adminLogin ? "block" : "none");">
-	<h2>Admin Panel</h2>
-	<div>
-		<input type="password" @bind="enteredPassword" />
-        <button @onclick="CheckAdmin">Login</button>
-        <button @onclick="LogoutAdmin">Logout</button>
-	</div>
-	<label style="color: red;">@loginMsg</label>
-	<div id="adminControls" style="display: @(isAdmin ? "block" : "none");">
-		<button @onclick="StartVoting">Abstimmung starten</button>
-		<button @onclick="StopVoting">Abstimmung stoppen</button>
-		<button @onclick="ResetVotes">Alle Bewertungen löschen</button>
-		<button @onclick="ClearLocalVote">Neue Abstimmung auf diesem Gerät erlauben</button>
-		<button @onclick="ChangePassword">Passwort ändern</button>
-		<button @onclick="ExportExcel">Excel exportieren</button>
-		<div id="adminStatus" style="margin-top:10px; color:blue;">@adminMsg</div>
-		<table id="summaryTable">
-			<thead>
-				<tr>
-					<th>Arbeit</th>
-					<th>Anzahl Nennung Favorit</th>
-					<th>Anzahl Nennung Topfavorit</th>
-					<th>Punkte</th>
-				</tr>
-			</thead>
-			<tbody>
-			</tbody>
-		</table>
-	</div>
-</div>
-
 
 @code {
 	[Parameter]
@@ -75,13 +43,6 @@
 
 	private string info = "Offen 5 Favoriten, 1 Topfavorit";
 	private string fehlerMeldung = "";
-
-	private string adminPassword = "Ayri";
-	private string enteredPassword = "";
-	private bool adminLogin = false;
-	private bool isAdmin = false;
-	private string loginMsg = "";
-	private string adminMsg = "";
 
 	private bool enableVoting = false;
 	private bool votingActive = false;
@@ -127,7 +88,7 @@
 			enableVoting = false;
 		}
 		else enableVoting = true;
-		
+
 		submitBtn = false;
 	}
 
@@ -140,68 +101,71 @@
 	private void HandleClick(int btnIndex)
 	{
 		var button = selectableButtons[btnIndex];
-		int newValue = 0;
-		if (countFavoriten <= 4)
-		{
-			if (button.Item2 == 0)
-			{
-				newValue++;
-				countFavoriten++;
-				favoritenList.Add(btnIndex+1);
-			}
-		}
+		int newValue = button.Item2;
 
-		if (button.Item2 == 1)
+		switch (button.Item2)
 		{
-			newValue = 0;
-			countFavoriten--;
-			favoritenList.Remove(btnIndex + 1);
-		}
-		if (button.Item2 == 2)
-		{
-			newValue = 0;
-			countTopFavorit--;
-			topFavorit = -1;
+			case 0:
+				if (countFavoriten < 5)
+				{
+					newValue = 1;
+					countFavoriten++;
+					favoritenList.Add(btnIndex + 1);
+				}
+				break;
+
+			case 1:
+				newValue = 0;
+				countFavoriten--;
+				favoritenList.Remove(btnIndex + 1);
+				break;
+
+			case 2:
+				newValue = 0;
+				countTopFavorit--;
+				topFavorit = -1;
+				break;
 		}
 
 		info = UpdateInfo();
-
 		selectableButtons[btnIndex] = (button.Item1, newValue);
 	}
+
+
 
 	private void HandleDblClick(int btnIndex)
 	{
 		var button = selectableButtons[btnIndex];
-		int newValue = 0;
+		int newValue = button.Item2;
+
 		if (countTopFavorit == 0)
 		{
 			if (button.Item2 == 0)
 			{
 				newValue = 2;
-				countTopFavorit++;
+				countTopFavorit = 1;
 				topFavorit = btnIndex + 1;
 			}
 			else if (button.Item2 == 1)
 			{
 				newValue = 2;
+				countTopFavorit = 1;
+				topFavorit = btnIndex + 1;
 				countFavoriten--;
 				favoritenList.Remove(btnIndex + 1);
-				countTopFavorit++;
-				topFavorit = btnIndex+1;
 			}
 		}
-		if (button.Item2 == 2)
+		else if (button.Item2 == 2)
 		{
 			newValue = 0;
-			countTopFavorit--;
-			topFavorit = -1;
+			countTopFavorit = 0;
+			topFavorit = 0;
 		}
 
 		info = UpdateInfo();
-
-
 		selectableButtons[btnIndex] = (button.Item1, newValue);
 	}
+
 
 	private string UpdateInfo()
 	{
@@ -229,104 +193,11 @@
 		RenderSummary(resultEntry);
 	}
 
-	private void CheckAdmin()
-	{
-		if (enteredPassword == adminPassword) 
-		{
-			isAdmin = true;
-			loginMsg = "";
-		}
-		else 
-		{
-			isAdmin = false;
-			loginMsg = "Falsches Passwort.";
-		}
-	}
-
-	private void LogoutAdmin()	
-	{
-		isAdmin = false;
-	}
-
-	private void StartVoting()
-	{
-		votingActive = true;
-		adminMsg = "Abstimmung wurde gestartet.";
-	}
-
-	private void StopVoting()
-	{
-		votingActive = false;
-		adminMsg = "Abstimmung wurde gestoppt.";
-	}
-
-	private void ClearLocalVote()
-	{
-		hasVoted = false;
-		EnableVoting();
-		adminMsg = "Dieses Gerät darf erneut abstimmen.";
-
-	}
-
-	private async Task ResetVotes()
-	{
-		bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", "Alle Bewertungen löschen?");
-		if (confirmed)
-		{
-			resultEntry = new();
-			RenderSummary(resultEntry);
-			adminMsg = "Alle Bewertungen wurden gelöscht.";
-		}
-	}
-
-	private async Task ChangePassword()
-	{
-		string? input = await JsRuntime.InvokeAsync<string>(
-			"showPrompt",
-			"Bitte gib einen Text ein:",
-			""
-		);
-
-		if (input != null)
-		{
-			adminPassword = input;
-			adminMsg = "Passwort wurde geändert.";
-		}
-		else
-		{
-			adminMsg = "Passwortänderung abgebrochen.";
-		}
-	}
-
-	private void ExportExcel() { }
 
 	private void RenderSummary(List<ResultEntry> resEntry)
 	{
-		// int[] favoritenCount = new int[20];
-		// int[] topfavoritenCount = new int[20];
-
-		// foreach (var entry in resEntry)
-		// {
-		// 	foreach(var i in entry.Favoriten)
-		// 	{
-		// 		favoritenCount[i - 1]++;
-		// 	}
-
-		// 	if (entry.Topfavorit.HasValue)
-		// 	{
-		// 		topfavoritenCount[entry.Topfavorit.Value - 1]++;
-		// 	}
-		// }
-
-		// Console.WriteLine("Nr | Favoriten | Topfavoriten | Punkte");
-		// for (int i = 0; i < 20; i++)
-		// {
-		// 	int punkte = favoritenCount[i] + topfavoritenCount[i] * 2;
-		// 	Console.WriteLine($"{i + 1,2} | {favoritenCount[i],9} | {topfavoritenCount[i],12} | {punkte,6}");
-		// }
-
 		string[] favoritenStr = favoritenList.Select(c => c.ToString()).ToArray();
-		Rating currRating = new(0, topFavorit.ToString(), favoritenStr[0], favoritenStr[1], favoritenStr[2], favoritenStr[3], favoritenStr[4]);
+		Rating currRating = new(Token, topFavorit.ToString(), favoritenStr[0], favoritenStr[1], favoritenStr[2], favoritenStr[3], favoritenStr[4]);
 		Console.WriteLine(currRating);
 		Rating.AddRanking(currRating);
 		Console.WriteLine(Token);
