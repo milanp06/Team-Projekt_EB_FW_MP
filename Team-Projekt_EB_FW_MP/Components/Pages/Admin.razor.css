@@ -419,6 +419,14 @@ h1 {
             background: #1d4ed8;
         }
 
+    .control-btn.import {
+        background: #4DB521;
+    }
+
+        .control-btn.import:hover {
+            background: #8FB068;
+        }
+
     .control-btn.voting {
         background: #42c2f5;
     }
