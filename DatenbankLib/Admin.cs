@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
 
 namespace DatenbankLib
 {
@@ -57,5 +58,24 @@ namespace DatenbankLib
                 return false;
             }
         }
-    }
+
+		public static bool ChangePassword(string email, string newPassword)
+        {
+			DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+			string hash = PasswordHasher.HashPassword(newPassword);
+			string sql = $"UPDATE {table_friendsOfAward_Admin} SET Password_Admin = '{hash}' WHERE USER_EMAIL = '{email}'";
+
+			try
+			{
+				wrappr.RunNonQuery(sql);
+
+				return true;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				return false;
+			}
+		}
+	}
 }

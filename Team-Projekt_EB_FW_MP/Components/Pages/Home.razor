@@ -302,31 +302,8 @@
 
 	private void RenderSummary(List<ResultEntry> resEntry)
 	{
-		// int[] favoritenCount = new int[20];
-		// int[] topfavoritenCount = new int[20];
-
-		// foreach (var entry in resEntry)
-		// {
-		// 	foreach(var i in entry.Favoriten)
-		// 	{
-		// 		favoritenCount[i - 1]++;
-		// 	}
-
-		// 	if (entry.Topfavorit.HasValue)
-		// 	{
-		// 		topfavoritenCount[entry.Topfavorit.Value - 1]++;
-		// 	}
-		// }
-
-		// Console.WriteLine("Nr | Favoriten | Topfavoriten | Punkte");
-		// for (int i = 0; i < 20; i++)
-		// {
-		// 	int punkte = favoritenCount[i] + topfavoritenCount[i] * 2;
-		// 	Console.WriteLine($"{i + 1,2} | {favoritenCount[i],9} | {topfavoritenCount[i],12} | {punkte,6}");
-		// }
-
-		string[] favoritenStr = favoritenList.Select(c => c.ToString()).ToArray();
-		Rating currRating = new(0, topFavorit.ToString(), favoritenStr[0], favoritenStr[1], favoritenStr[2], favoritenStr[3], favoritenStr[4]);
+		int[] favoriten = favoritenList.Select(c => c).ToArray();
+		Rating currRating = new(0, topFavorit, favoriten[0], favoriten[1], favoriten[2], favoriten[3], favoriten[4]);
 		Console.WriteLine(currRating);
 		Rating.AddRanking(currRating);
 		Console.WriteLine(Token);

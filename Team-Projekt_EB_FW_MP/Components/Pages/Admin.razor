@@ -53,19 +53,6 @@
 
     private void Test()
     {
-        // OpenFileDialog ofd = new OpenFileDialog();
-        // ofd.Filter = "CSV-Datei|*.csv|Textdatei|*.txt|AnyFile|*.any";
-        // ofd.Title = "Eine TXT, CSV oder ANY Datei auswählen";
-        // ofd.InitialDirectory = Application.StartupPath;
-
-        // DialogResult result = ofd.ShowDialog();
-        // if (result == DialogResult.OK)
-        // {
-        //     string fileName = ofd.FileName;
-        //     txtFileName.Text = fileName;
-        //     txtText.Text = File.ReadAllText(fileName);
-        //     originalText = txtText.Text;
-        //     MessageBox.Show("file loaded");
-        // }
+        DatenbankLib.Project.CalculatePublikumsvoting();
     }
 }

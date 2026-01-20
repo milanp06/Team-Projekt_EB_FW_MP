@@ -9,14 +9,14 @@ namespace DatenbankLib
 
         // Properties
         private int id { get; }
-        private string TopFavorit { get; }
-        private string Favorit1 { get; }
-        private string Favorit2 { get; }
-        private string Favorit3 { get; }
-        private string Favorit4 { get; }
-        private string Favorit5 { get; }
+        public int TopFavorit { get; }
+		public int Favorit1 { get; }
+		public int Favorit2 { get; }
+		public int Favorit3 { get; }
+		public int Favorit4 { get; }
+		public int Favorit5 { get; }
         // Konstruktor
-        public Rating(int id, string topFavorit, string favorit1, string favorit2, string favorit3, string favorit4, string favorit5)
+        public Rating(int id, int topFavorit, int favorit1, int favorit2, int favorit3, int favorit4, int favorit5)
         {
             this.id = id;
             TopFavorit = topFavorit;
@@ -80,14 +80,21 @@ namespace DatenbankLib
             string sql = "SELECT * FROM friendsOfAward_Ranking;";
             DataTable eventTable = new DataTable();
 
-            Rating rating = new Rating(0, "", "", "", "", "", "");
             List<Rating> ratings = new List<Rating>();
-            eventTable = wrappr.RunQuery(sql);
+
+            try
+            {
+				eventTable = wrappr.RunQuery(sql);
+			}
+            catch (Exception ex)
+            {
+				Console.WriteLine(ex.Message);
+                return new List<Rating>();
+			}
 
             foreach (DataRow row in eventTable.Rows)
             {
-
-                rating = new Rating((int) row[0],(string)row[1], (string)row[2], (string)row[3], (string)row[4], (string)row[5], (string)row[6]);
+                Rating rating = new Rating(Convert.ToInt32(row[0]), Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToInt32(row[3]), Convert.ToInt32(row[4]), Convert.ToInt32(row[5]), Convert.ToInt32(row[6]));
                 ratings.Add(rating);
             }
             return ratings;
