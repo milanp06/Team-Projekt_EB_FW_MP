@@ -289,7 +289,10 @@
         }
     }
 
-    private void ExportExcel() { }
+    private void ExportExcel()
+    {
+        DatenbankLib.Project.CalculatePublikumsvoting();
+    }
 
     private bool showImportPopup = false;
     private string? importFileName;

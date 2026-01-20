@@ -10,11 +10,11 @@ namespace DatenbankLib
         // Properties
         public string Token { get; }
         public int TopFavorit { get; }
-	public int Favorit1 { get; }
-	public int Favorit2 { get; }
-	public int Favorit3 { get; }
-	public int Favorit4 { get; }
-	public int Favorit5 { get; }
+	    public int Favorit1 { get; }
+	    public int Favorit2 { get; }
+	    public int Favorit3 { get; }
+	    public int Favorit4 { get; }
+	    public int Favorit5 { get; }
         // Konstruktor
         public Rating(string token, int topFavorit, int favorit1, int favorit2, int favorit3, int favorit4, int favorit5)
         {
@@ -32,7 +32,7 @@ namespace DatenbankLib
             return TopFavorit + " " + Favorit1 + " " + Favorit2 + " " + Favorit3 + " " + Favorit4 + " " + Favorit5;
         }
 
-         private static string SqlEscape(string? s) => (s ?? "").Replace("'", "''");
+        private static string SqlEscape(string? s) => (s ?? "").Replace("'", "''");
         public static int DeleteAllRatings()
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
@@ -109,7 +109,7 @@ namespace DatenbankLib
 
             foreach (DataRow row in eventTable.Rows)
             {
-                Rating rating = new Rating((row[0].ToString(), Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToInt32(row[3]), Convert.ToInt32(row[4]), Convert.ToInt32(row[5]), Convert.ToInt32(row[6]));
+                Rating rating = new Rating(row[0].ToString(), Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToInt32(row[3]), Convert.ToInt32(row[4]), Convert.ToInt32(row[5]), Convert.ToInt32(row[6]));
                 ratings.Add(rating);
             }
             return ratings;

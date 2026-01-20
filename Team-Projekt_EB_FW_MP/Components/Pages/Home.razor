@@ -73,7 +73,9 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		for (int i = 0; i < 20; i++)
+		int buttons = DatenbankLib.Project.GetProjectCount();
+
+		for (int i = 0; i < buttons; i++)
 		{
 			selectableButtons.Add(($"selectedButton{i + 1}", 0));
 		}
