@@ -15,6 +15,8 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<MyCustomAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
   provider.GetRequiredService<MyCustomAuthStateProvider>());
+builder.Services.AddSingleton<VotingService>();
+
 
 var app = builder.Build();
 
