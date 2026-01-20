@@ -204,8 +204,8 @@
 
 	private void RenderSummary(List<ResultEntry> resEntry)
 	{
-		string[] favoritenStr = favoritenList.Select(c => c.ToString()).ToArray();
-		Rating currRating = new(Token, topFavorit.ToString(), favoritenStr[0], favoritenStr[1], favoritenStr[2], favoritenStr[3], favoritenStr[4]);
+		int[] favoriten = favoritenList.Select(c => c).ToArray();
+		Rating currRating = new(Token, topFavorit, favoriten[0], favoriten[1], favoriten[2], favoriten[3], favoriten[4]);
 		Console.WriteLine(currRating);
 		Rating.AddRanking(currRating);
 		Console.WriteLine(Token);

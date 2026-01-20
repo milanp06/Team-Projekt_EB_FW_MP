@@ -5,19 +5,18 @@ namespace DatenbankLib
     public class Rating
     {
         // Merkmale 
-        private static string table_friendsOfAward_Ranking = "friendsofaward_ranking";
+        private static string table_friendsOfAward_Ranking = "friendsOfAward_Ranking";
 
         // Properties
-        private string Token { get; }
-        private string TopFavorit { get; }
-        private string Favorit1 { get; }
-        private string Favorit2 { get; }
-        private string Favorit3 { get; }
-        private string Favorit4 { get; }
-        private string Favorit5 { get; }
-
+        public string Token { get; }
+        public int TopFavorit { get; }
+	public int Favorit1 { get; }
+	public int Favorit2 { get; }
+	public int Favorit3 { get; }
+	public int Favorit4 { get; }
+	public int Favorit5 { get; }
         // Konstruktor
-        public Rating(string token, string topFavorit, string favorit1, string favorit2, string favorit3, string favorit4, string favorit5)
+        public Rating(string token, int topFavorit, int favorit1, int favorit2, int favorit3, int favorit4, int favorit5)
         {
             Token = token;
             TopFavorit = topFavorit;
@@ -33,8 +32,7 @@ namespace DatenbankLib
             return TopFavorit + " " + Favorit1 + " " + Favorit2 + " " + Favorit3 + " " + Favorit4 + " " + Favorit5;
         }
 
-        private static string SqlEscape(string? s) => (s ?? "").Replace("'", "''");
-
+         private static string SqlEscape(string? s) => (s ?? "").Replace("'", "''");
         public static int DeleteAllRatings()
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
@@ -61,10 +59,10 @@ namespace DatenbankLib
             string successMessage = $"Erfolgreich eingefügt: {rating}";
             string errorMessage = successMessage;
             int errorCount = 0;
-
-            string sql = $"INSERT INTO {table_friendsOfAward_Ranking} (Token, TopFavorit, Favorit1, Favorit2, Favorit3, Favorit4, Favorit5) " +
-                         $"SELECT u.token, '{SqlEscape(rating.TopFavorit)}', '{SqlEscape(rating.Favorit1)}', '{SqlEscape(rating.Favorit2)}', '{SqlEscape(rating.Favorit3)}', '{SqlEscape(rating.Favorit4)}', '{SqlEscape(rating.Favorit5)}' " +
-                         $"FROM friendsofaward_user u WHERE u.token = '{SqlEscape(rating.Token)}' LIMIT 1;";
+            string sql = $"INSERT INTO {table_friendsOfAward_Ranking} " +
+             "(Token, TopFavorit, Favorit1, Favorit2, Favorit3, Favorit4, Favorit5) " +
+             $"SELECT u.token, {rating.TopFavorit}, {rating.Favorit1}, {rating.Favorit2}, {rating.Favorit3}, {rating.Favorit4}, {rating.Favorit5} " +
+             $"FROM friendsofaward_user u WHERE u.token = '{SqlEscape(rating.Token)}' LIMIT 1;";
 
             try
             {
@@ -90,47 +88,31 @@ namespace DatenbankLib
 
             return successMessage;
         }
-
+        
         public static List<Rating> GetAllRatings()
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
-            string sql = $"SELECT Token, TopFavorit, Favorit1, Favorit2, Favorit3, Favorit4, Favorit5 FROM {table_friendsOfAward_Ranking};";
+            string sql = "SELECT * FROM friendsOfAward_Ranking;";
             DataTable eventTable = new DataTable();
 
             List<Rating> ratings = new List<Rating>();
-            eventTable = wrappr.RunQuery(sql);
+
+            try
+            {
+				eventTable = wrappr.RunQuery(sql);
+			}
+            catch (Exception ex)
+            {
+				Console.WriteLine(ex.Message);
+                return new List<Rating>();
+			}
 
             foreach (DataRow row in eventTable.Rows)
             {
-                // map columns explicitly to constructor order
-                var token = row[0]?.ToString() ?? "";
-                var top = row[1]?.ToString() ?? "";
-                var f1 = row[2]?.ToString() ?? "";
-                var f2 = row[3]?.ToString() ?? "";
-                var f3 = row[4]?.ToString() ?? "";
-                var f4 = row[5]?.ToString() ?? "";
-                var f5 = row[6]?.ToString() ?? "";
-
-                var rating = new Rating(token, top, f1, f2, f3, f4, f5);
+                Rating rating = new Rating((row[0].ToString(), Convert.ToInt32(row[1]), Convert.ToInt32(row[2]), Convert.ToInt32(row[3]), Convert.ToInt32(row[4]), Convert.ToInt32(row[5]), Convert.ToInt32(row[6]));
                 ratings.Add(rating);
             }
             return ratings;
         }
-        public static Dictionary<string, int> Evaluation()
-        {
-            List<Rating> ratings = GetAllRatings();
-            var punkte = new Dictionary<string, int> { };
-            foreach (var r in ratings)
-            {
-                punkte.Add(ratings[1].TopFavorit, 2);
-                punkte.Add(ratings[2].Favorit1, 1 );
-                punkte.Add(ratings[3].Favorit2, 1);
-                punkte.Add(ratings[4].Favorit3, 1);
-                punkte.Add(ratings[5].Favorit4, 1);
-                punkte.Add(ratings[6].Favorit5, 1);              
-            }
-            return punkte;
-        }
     }
 }
-
