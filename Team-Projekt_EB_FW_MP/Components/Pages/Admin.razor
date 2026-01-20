@@ -3,6 +3,7 @@
 @using System.Net.Sockets;
 @rendermode InteractiveServer
 @inject IJSRuntime JsRuntime
+@inject VotingService votingService
 
 <div class="admin-container">
 
@@ -128,7 +129,7 @@
                         Votingtyp wechseln
                     </button>
                     <button disabled class="control-btn currvoting">
-                        Typ: @votingType
+                        Typ:  @votingService.VotingType
                     </button>
                 </div>
 
@@ -231,13 +232,13 @@
     private bool submitBtn = false;
     private bool hasVoted = false;
 
-    private string votingType = "Schulvoting";
+    public string votingType = "Schulvoting";
 
     private void ChangeVotingType()
     {
-        if (votingType == "Schulvoting") votingType = "Publikumsvoting";
-        else if (votingType == "Publikumsvoting") votingType = "Juryvoting";
-        else if (votingType == "Juryvoting") votingType = "Schulvoting";
+        if (votingService.VotingType == "Schulvoting") votingService.VotingType = "Publikumsvoting";
+        else if (votingService.VotingType == "Publikumsvoting") votingService.VotingType = "Juryvoting";
+        else votingService.VotingType = "Schulvoting";
     }
 
     private void StartVoting()

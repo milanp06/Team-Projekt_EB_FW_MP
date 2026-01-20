@@ -1,5 +1,6 @@
 ﻿@page "/Jury/{Token}"
 @rendermode InteractiveServer
+@inject VotingService votingService
 
 <PageTitle>Jury Voting System</PageTitle>
 
@@ -22,7 +23,7 @@
                 <div class="contestant-country">@contestant.Country</div>
             </div>
 
-            <div class="criteria-section">
+            <div class="criteria-section" disabled>
                 <p class="instruction">Bitte bewerten Sie die aktuell präsentierte Diplomarbeit.*</p>
 
                 <table class="voting-table">
@@ -66,7 +67,7 @@
                 <button class="nav-btn" @onclick="PreviousContestant" disabled="@(currentContestantIndex == 0)">
                     ← Previous
                 </button>
-                <button class="nav-btn primary" @onclick="NextContestant">
+                <button class="nav-btn primary" @onclick="NextContestant" disabled="@(votingService.VotingType != "Juryvoting")">
                     @(currentContestantIndex < contestants.Count - 1 ? "Next →" : "Finish")
                 </button>
             </div>
@@ -121,7 +122,8 @@
         new Contestant { Id = 2, Name = "Contestant 2", Country = "Country B" },
         new Contestant { Id = 3, Name = "Contestant 3", Country = "Country C" },
         new Contestant { Id = 4, Name = "Contestant 4", Country = "Country D" },
-        new Contestant { Id = 5, Name = "Contestant 5", Country = "Country E" }
+        new Contestant { Id = 5, Name = "Contestant 5", Country = "Country E" },
+        new Contestant { Id = 6, Name = "Contestant 6", Country = "Country F" }
     };
 
     private List<Criterion> criteria = new()
