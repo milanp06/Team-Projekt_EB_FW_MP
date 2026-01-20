@@ -1,5 +1,10 @@
-﻿<h3>JuryVoting</h3>
+﻿@page "/Jury/{Token}"
+@rendermode InteractiveServer
+@inject IJSRuntime JsRuntime
+
+<h3>JuryVoting</h3>
 
 @code {
-
+    [Parameter]
+    public string Token { get; set; } = "";
 }
