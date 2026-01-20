@@ -419,6 +419,22 @@ h1 {
             background: #1d4ed8;
         }
 
+    .control-btn.voting {
+        background: #42c2f5;
+    }
+
+        .control-btn.voting:hover {
+            background: #135975;
+        }
+
+    .control-btn.currvoting {
+        background: #0c127d;
+        pointer-events: none;
+        cursor: none;
+
+    }
+    
+
 .status-msg {
     padding: 1rem;
     background: #eff6ff;
