@@ -1,10 +1,252 @@
 ﻿@page "/Jury/{Token}"
 @rendermode InteractiveServer
-@inject IJSRuntime JsRuntime
 
-<h3>JuryVoting</h3>
+<PageTitle>Jury Voting System</PageTitle>
+
+<div class="container">
+    <h1>🎭 Jury Voting System</h1>
+
+    @if (!string.IsNullOrEmpty(warningMessage))
+    {
+        <div class="warning">@warningMessage</div>
+    }
+
+    @if (currentContestantIndex < contestants.Count)
+    {
+        var contestant = contestants[currentContestantIndex];
+
+        <div class="current-contestant">
+            <div class="contestant-info">
+                <div class="contestant-number">Contestant @(currentContestantIndex + 1) of @contestants.Count</div>
+                <div class="contestant-name">@contestant.Name</div>
+                <div class="contestant-country">@contestant.Country</div>
+            </div>
+
+            <div class="criteria-section">
+                <p class="instruction">Bitte bewerten Sie die aktuell präsentierte Diplomarbeit.*</p>
+
+                <table class="voting-table">
+                    <thead>
+                        <tr>
+                            <th class="criteria-header"></th>
+                            <th>Nicht überzeugend</th>
+                            <th>Ausbaufähig</th>
+                            <th>Solide</th>
+                            <th>Überzeugend</th>
+                            <th>Herausragend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var criterion in criteria)
+                        {
+                            <tr class="@(GetRowClass(criterion))">
+                                <td class="criteria-label">
+                                    <strong>@criterion.Name</strong>
+                                    <span class="description">@criterion.Description</span>
+                                    <span class="weight">(@criterion.Weight%)</span>
+                                </td>
+                                @for (int score = 1; score <= 5; score++)
+                                {
+                                    var localScore = score;
+                                    var isSelected = GetScore(contestant.Id, criterion.Id) == localScore;
+                                    <td>
+                                        <button class="radio-btn @(isSelected ? "selected" : "")"
+                                                @onclick="() => SetScore(contestant.Id, criterion.Id, localScore)">
+                                            <span class="radio-circle"></span>
+                                        </button>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="navigation">
+                <button class="nav-btn" @onclick="PreviousContestant" disabled="@(currentContestantIndex == 0)">
+                    ← Previous
+                </button>
+                <button class="nav-btn primary" @onclick="NextContestant">
+                    @(currentContestantIndex < contestants.Count - 1 ? "Next →" : "Finish")
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="results-section">
+            <h2>Voting Complete - Results</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Contestant</th>
+                        <th>Country</th>
+                        <th>Total Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var results = GetResults();
+                    }
+                    @foreach (var result in results)
+                    {
+                        <tr>
+                            <td>@result.Rank</td>
+                            <td>@result.Name</td>
+                            <td>@result.Country</td>
+                            <td>@result.TotalScore.ToString("F1")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <button class="reset-btn" @onclick="ResetVotes">Start Over</button>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter]
     public string Token { get; set; } = "";
+
+    private int currentContestantIndex = 0;
+    private Dictionary<string, int> scores = new(); // Key: "contestantId-criterionId", Value: score (1-5)
+    private string warningMessage = "";
+    private System.Threading.Timer? warningTimer;
+
+    private List<Contestant> contestants = new()
+    {
+        new Contestant { Id = 1, Name = "Contestant 1", Country = "Country A" },
+        new Contestant { Id = 2, Name = "Contestant 2", Country = "Country B" },
+        new Contestant { Id = 3, Name = "Contestant 3", Country = "Country C" },
+        new Contestant { Id = 4, Name = "Contestant 4", Country = "Country D" },
+        new Contestant { Id = 5, Name = "Contestant 5", Country = "Country E" }
+    };
+
+    private List<Criterion> criteria = new()
+    {
+        new Criterion { Id = 1, Name = "KLARHEIT DER PRÄSENTATION", Description = "Wurde das Projekt verständlich und strukturiert erklärt?", Weight = 25 },
+        new Criterion { Id = 2, Name = "INNOVATIONSGRAD", Description = "Wie neuartig ist die Idee oder Lösung?", Weight = 20 },
+        new Criterion { Id = 3, Name = "FACHLICHE TIEFE", Description = "Wird der genaue, dass technisches Wissen angewendet wurde?", Weight = 20 },
+        new Criterion { Id = 4, Name = "RELEVANZ DES THEMAS", Description = "Hat das Projekt einen praktischen Mehrwert oder gesellschaftliche/technische Relevanz?", Weight = 15 },
+        new Criterion { Id = 5, Name = "ÜBERZEUGUNGSKRAFT", Description = "Wie überzeugend wurde das Projekt präsentiert?", Weight = 10 },
+        new Criterion { Id = 6, Name = "ZEITMANAGEMENT", Description = "Wurde die Zeit effektiv genutzt?", Weight = 10 }
+    };
+
+    private void SetScore(int contestantId, int criterionId, int score)
+    {
+        var key = $"{contestantId}-{criterionId}";
+        scores[key] = score;
+    }
+
+    private int GetScore(int contestantId, int criterionId)
+    {
+        var key = $"{contestantId}-{criterionId}";
+        return scores.ContainsKey(key) ? scores[key] : 0;
+    }
+
+    private void NextContestant()
+    {
+        // Check if all criteria are scored for current contestant
+        var currentContestant = contestants[currentContestantIndex];
+        var allScored = criteria.All(c => GetScore(currentContestant.Id, c.Id) > 0);
+
+        if (!allScored)
+        {
+            ShowWarning("Please score all criteria before proceeding.");
+            return;
+        }
+
+        currentContestantIndex++;
+    }
+
+    private void PreviousContestant()
+    {
+        if (currentContestantIndex > 0)
+        {
+            currentContestantIndex--;
+        }
+    }
+
+    private void ResetVotes()
+    {
+        currentContestantIndex = 0;
+        scores.Clear();
+        warningMessage = "";
+    }
+
+    private List<ContestantResult> GetResults()
+    {
+        var results = contestants.Select(c =>
+        {
+            var totalScore = 0.0;
+            foreach (var criterion in criteria)
+            {
+                var score = GetScore(c.Id, criterion.Id);
+                totalScore += score * (criterion.Weight / 100.0);
+            }
+
+            return new ContestantResult
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Country = c.Country,
+                TotalScore = totalScore
+            };
+        }).OrderByDescending(r => r.TotalScore).ToList();
+
+        for (int i = 0; i < results.Count; i++)
+        {
+            results[i].Rank = i + 1;
+        }
+
+        return results;
+    }
+
+    private string GetRowClass(Criterion criterion)
+    {
+        return criterion.Id % 2 == 0 ? "even-row" : "odd-row";
+    }
+
+    private void ShowWarning(string message)
+    {
+        warningMessage = message;
+
+        warningTimer?.Dispose();
+        warningTimer = new System.Threading.Timer(_ =>
+        {
+            warningMessage = "";
+            InvokeAsync(StateHasChanged);
+        }, null, 3000, Timeout.Infinite);
+    }
+
+    private class Contestant
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Country { get; set; } = "";
+    }
+
+    private class Criterion
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public int Weight { get; set; }
+    }
+
+    private class ContestantResult
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Country { get; set; } = "";
+        public double TotalScore { get; set; }
+        public int Rank { get; set; }
+    }
+
+    public void Dispose()
+    {
+        warningTimer?.Dispose();
+    }
 }
