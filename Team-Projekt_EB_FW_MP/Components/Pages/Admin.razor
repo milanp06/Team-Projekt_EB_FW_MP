@@ -76,7 +76,7 @@
                         </svg>
                         Abstimmung starten
                     </button>
-                    <button @onclick="StopVoting" class="control-btn danger">
+                    <button @onclick="StopVoting" class="control-btn dangerbtn">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="6" y="4" width="4" height="16" />
                             <rect x="14" y="4" width="4" height="16" />
@@ -110,6 +110,15 @@
                             <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
                         Excel exportieren
+                    </button>
+                    <button @onclick="OpenImportPopup" class="control-btn import">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Excel importieren
                     </button>
                     <button @onclick="ChangeVotingType" class="control-btn voting">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -149,6 +158,30 @@
         </div>
     </div>
 </div>
+
+@if (showImportPopup)
+{
+    <div class="modal-backdrop" @onclick="CloseImportPopup">
+        <div class="modal" @onclick:stopPropagation>
+            <h3>Excel importieren</h3>
+
+            <div class="dropzone">
+                <InputFile OnChange="HandleExcelUpload" accept=".xlsx,.xls" />
+                <p>Excel-Datei hier ablegen oder klicken</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(importFileName))
+            {
+                <p class="file-info">📄 @importFileName</p>
+            }
+
+            <div class="modal-actions">
+                <button class="control-btn danger" @onclick="CloseImportPopup">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+}
+
 
 
 @code {
@@ -256,4 +289,35 @@
     }
 
     private void ExportExcel() { }
+
+    private bool showImportPopup = false;
+    private string? importFileName;
+
+    private void OpenImportPopup()
+    {
+        showImportPopup = true;
+    }
+
+    private void CloseImportPopup()
+    {
+        showImportPopup = false;
+        importFileName = null;
+    }
+
+    private async Task HandleExcelUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        importFileName = file.Name;
+
+        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+
+        byte[] fileBytes = ms.ToArray();
+
+        adminMsg = $"Excel '{file.Name}' wurde importiert.";
+
+        showImportPopup = false;
+    }
+
 }
