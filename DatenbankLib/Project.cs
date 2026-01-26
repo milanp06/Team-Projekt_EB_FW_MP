@@ -13,18 +13,12 @@ namespace DatenbankLib
         public string Id { get; }
         public string Title { get; }
         public string Author { get; }
-        public int Schulvoting { get; }
-		public int Publikumsvoting { get; }
-		public int Juryvoting { get; }
 
 		public Project(string id, string title, string author, int schulvoting, int publikumsvoting, int juryvoting)
         {
             Id = id;
             Title = title;
             Author = author;
-            Schulvoting = schulvoting;
-            Publikumsvoting = publikumsvoting;
-            Juryvoting = juryvoting;
 
 		}
 
