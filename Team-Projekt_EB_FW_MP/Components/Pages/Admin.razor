@@ -4,6 +4,8 @@
 @rendermode InteractiveServer
 @inject IJSRuntime JsRuntime
 @inject VotingService votingService
+@implements IDisposable
+
 
 <div class="admin-container">
 
@@ -145,12 +147,29 @@
                             <thead>
                                 <tr>
                                     <th>Arbeit</th>
-                                    <th>Anzahl Nennung Favorit</th>
-                                    <th>Anzahl Nennung Topfavorit</th>
                                     <th>Punkte</th>
                                 </tr>
                             </thead>
+
                             <tbody>
+                                @if (collection.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="2" class="empty">
+                                            Keine Ergebnisse vorhanden
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var result in SortedResults)
+                                    {
+                                        <tr>
+                                            <td>@result.Arbeit</td>
+                                            <td>@GetPoints(result)</td>
+                                        </tr>
+                                    }
+                                }
                             </tbody>
                         </table>
                     </div>
@@ -186,6 +205,8 @@
 
 
 @code {
+    private System.Threading.Timer? _refreshTimer;
+
     private string QrCodeBase64 = "";
 
     private void GenerateQr()
@@ -233,6 +254,21 @@
     private bool hasVoted = false;
 
     public string votingType = "Schulvoting";
+    private List<Results> collection = new();
+
+
+    protected override void OnInitialized()
+    {
+        collection = DatenbankLib.Results.GetResults();
+
+
+        _refreshTimer = new System.Threading.Timer(
+            async _ => await RefreshResults(),
+            null,
+            TimeSpan.FromSeconds(15), // first run
+            TimeSpan.FromSeconds(15)  // repeat
+        );
+    }
 
     private void ChangeVotingType()
     {
@@ -323,5 +359,30 @@
 
         showImportPopup = false;
     }
+
+    private async Task RefreshResults()
+    {
+        collection = DatenbankLib.Results.GetResults();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+    }
+
+    private double GetPoints(Results result)
+    {
+        return votingService.VotingType switch
+        {
+            "Schulvoting" => result.Schulvoting,
+            "Publikumsvoting" => result.Publikumsvoting,
+            "Juryvoting" => result.Juryvoting,
+            _ => 0
+        };
+    }
+
+    private IEnumerable<Results> SortedResults => collection.OrderByDescending(r => GetPoints(r));
+
 
 }

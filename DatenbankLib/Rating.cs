@@ -115,4 +115,42 @@ namespace DatenbankLib
             return ratings;
         }
     }
+    public class Results
+    {
+        public string Arbeit { get; set; }
+        public double Schulvoting { get; set; }
+        public double Publikumsvoting { get; set; }
+        public double Juryvoting { get; set; }
+
+        public Results(string arbeit, double schulvoting, double publikumsvoting, double juryvoting)
+        {
+            this.Arbeit = arbeit;
+            this.Schulvoting = schulvoting;
+            this.Publikumsvoting = publikumsvoting;
+            this.Juryvoting = juryvoting;
+        }
+
+        public static List<Results> GetResults()
+        {
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+            string sql = "SELECT Title, Schulvoting, Publikumsvoting, Juryvoting FROM friendsOfAward_projects;";
+            DataTable eventTable = new DataTable();
+            List<Results> res = new();
+
+            try
+            {
+                eventTable = wrappr.RunQuery(sql);
+                foreach (DataRow row in eventTable.Rows)
+                {
+                    res.Add(new(row[0].ToString(), double.Parse(row[1].ToString()), double.Parse(row[2].ToString()), double.Parse(row[3].ToString())));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return res;
+        }
+    }
 }
