@@ -21,4 +21,53 @@
     };
 </script>
 
+<script>
+    window.setupDragDrop = (elementId, inputElement) => {
+        const dropzone = document.getElementById(elementId);
+        if (!dropzone) return;
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.add('drag-over');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.remove('drag-over');
+            }, false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const input = inputElement;
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(files[0]);
+                input.files = dataTransfer.files;
+
+                const event = new Event('change', { bubbles: true });
+                input.dispatchEvent(event);
+            }
+        }, false);
+    };
+
+    window.removeDragDrop = (elementId) => {
+        const dropzone = document.getElementById(elementId);
+        if (dropzone) {
+            const newElement = dropzone.cloneNode(true);
+            dropzone.parentNode.replaceChild(newElement, dropzone);
+        }
+    };
+</script>
+
 </html>

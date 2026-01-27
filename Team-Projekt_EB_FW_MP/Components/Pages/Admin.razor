@@ -118,7 +118,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="7 10 12 15 17 10" />
+                            <polyline points="17 10 12 5 7 10" />
                             <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
                         Excel importieren
@@ -131,7 +131,7 @@
                         Votingtyp wechseln
                     </button>
                     <button disabled class="control-btn currvoting">
-                        Typ:  @votingService.VotingType
+                        Typ: @votingService.VotingType
                     </button>
                 </div>
 
@@ -185,14 +185,31 @@
         <div class="modal" @onclick:stopPropagation>
             <h3>Excel importieren</h3>
 
-            <div class="dropzone">
-                <InputFile OnChange="HandleExcelUpload" accept=".xlsx,.xls" />
-                <p>Excel-Datei hier ablegen oder klicken</p>
-            </div>
+            <label class="dropzone" id="dropzone-area" for="fileInput">
+                <InputFile @ref="inputFileRef" id="fileInput" OnChange="HandleExcelUpload" accept=".xlsx,.xls" class="file-input" />
+                <div class="dropzone-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="upload-icon">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <p class="dropzone-text">Excel-Datei hier ablegen oder klicken</p>
+                    <p class="dropzone-hint">XLSX oder XLS Dateien (max. 10 MB)</p>
+                </div>
+            </label>
 
             @if (!string.IsNullOrEmpty(importFileName))
             {
-                <p class="file-info">📄 @importFileName</p>
+                <div class="file-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    <span>@importFileName</span>
+                </div>
             }
 
             <div class="modal-actions">
@@ -206,7 +223,7 @@
 
 @code {
     private System.Threading.Timer? _refreshTimer;
-
+    private InputFile? inputFileRef;
     private string QrCodeBase64 = "";
 
     private void GenerateQr()
@@ -255,6 +272,9 @@
 
     public string votingType = "Schulvoting";
     private List<Results> collection = new();
+
+    private bool showImportPopup = false;
+    private string? importFileName;
 
 
     protected override void OnInitialized()
@@ -330,18 +350,34 @@
         DatenbankLib.Project.CalculatePublikumsvoting();
     }
 
-    private bool showImportPopup = false;
-    private string? importFileName;
-
     private void OpenImportPopup()
     {
         showImportPopup = true;
+        StateHasChanged();
+        _ = InitializeDragDrop();
     }
 
-    private void CloseImportPopup()
+    private async Task InitializeDragDrop()
     {
+        await Task.Delay(100); // Wait for modal to render
+
+        if (inputFileRef?.Element != null)
+        {
+            await JsRuntime.InvokeVoidAsync("setupDragDrop", "dropzone-area", inputFileRef.Element.Value);
+        }
+    }
+
+    private async void CloseImportPopup()
+    {
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("removeDragDrop", "dropzone-area");
+        }
+        catch { }
+
         showImportPopup = false;
         importFileName = null;
+        StateHasChanged();
     }
 
     private async Task HandleExcelUpload(InputFileChangeEventArgs e)
@@ -349,15 +385,26 @@
         var file = e.File;
         importFileName = file.Name;
 
-        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-        using var ms = new MemoryStream();
-        await stream.CopyToAsync(ms);
+        try
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
 
-        byte[] fileBytes = ms.ToArray();
+            byte[] fileBytes = ms.ToArray();
 
-        adminMsg = $"Excel '{file.Name}' wurde importiert.";
+            // Process your Excel file here with fileBytes
+            adminMsg = $"Excel '{file.Name}' wurde erfolgreich importiert.";
 
-        showImportPopup = false;
+            await Task.Delay(1500);
+            CloseImportPopup();
+        }
+        catch (Exception ex)
+        {
+            adminMsg = $"Fehler beim Importieren: {ex.Message}";
+        }
+
+        StateHasChanged();
     }
 
     private async Task RefreshResults()
@@ -383,6 +430,4 @@
     }
 
     private IEnumerable<Results> SortedResults => collection.OrderByDescending(r => GetPoints(r));
-
-
 }
