@@ -133,6 +133,15 @@
                     <button disabled class="control-btn currvoting">
                         Typ: @votingService.VotingType
                     </button>
+                    <button @onclick="OpenGenerateMultipleQrPopup" class="control-btn primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                        Mehrere QR-Codes generieren
+                    </button>
                 </div>
 
                 @if (!string.IsNullOrEmpty(adminMsg))
@@ -219,7 +228,37 @@
     </div>
 }
 
+@if (showGenerateQrPopup)
+{
+    <div class="modal-backdrop" @onclick="CloseGenerateQrPopup">
+        <div class="modal" @onclick:stopPropagation>
+            <h3>Mehrere QR-Codes generieren</h3>
 
+            <div class="input-wrapper">
+                <label for="qrCount">Anzahl der QR-Codes</label>
+                <input id="qrCount"
+                       type="number"
+                       class="form-input"
+                       @bind="qrCodeCount"
+                       min="1"
+                       max="100"
+                       placeholder="z.B. 10" />
+            </div>
+
+            <div class="modal-actions">
+                <button class="control-btn success" @onclick="GenerateMultipleQrCodes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Generieren & Herunterladen
+                </button>
+                <button class="control-btn danger" @onclick="CloseGenerateQrPopup">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private System.Threading.Timer? _refreshTimer;
@@ -430,4 +469,364 @@
     }
 
     private IEnumerable<Results> SortedResults => collection.OrderByDescending(r => GetPoints(r));
+
+    private bool showGenerateQrPopup = false;
+private int qrCodeCount = 10;
+
+private void OpenGenerateMultipleQrPopup()
+{
+    showGenerateQrPopup = true;
+}
+
+private void CloseGenerateQrPopup()
+{
+    showGenerateQrPopup = false;
+}
+
+private async Task GenerateMultipleQrCodes()
+{
+    if (qrCodeCount < 1 || qrCodeCount > 100)
+    {
+        adminMsg = "Bitte geben Sie eine Zahl zwischen 1 und 100 ein.";
+        return;
+    }
+
+    try
+    {
+        // Server-IP ermitteln
+        string serverIp = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(n =>
+                n.OperationalStatus == OperationalStatus.Up &&
+                n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+            .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+            .First(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
+            .Address
+            .ToString();
+
+        var qrCodesData = new List<QrCodeData>();
+
+        // QR-Codes generieren
+        for (int i = 0; i < qrCodeCount; i++)
+        {
+            var token = Guid.NewGuid().ToString();
+            var password = GeneratePassword(); // Passwort für jeden QR-Code
+
+            // Token in DB speichern
+            var qrToken = new QrToken(token, false);
+            DatenbankLib.QrToken.AddQrToken(qrToken);
+
+            // QR-Code URL
+            var qrUrl = $"http://{serverIp}:5432/login/{token}";
+
+            // QR-Code als Base64 generieren
+            using var qrGenerator = new QRCoder.QRCodeGenerator();
+            var qrData = qrGenerator.CreateQrCode(qrUrl, QRCoder.QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new QRCoder.QRCode(qrData);
+            using var bitmap = qrCode.GetGraphic(20);
+
+            using var ms = new MemoryStream();
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            var base64 = Convert.ToBase64String(ms.ToArray());
+
+            qrCodesData.Add(new QrCodeData
+            {
+                Id = i + 1,
+                Token = token,
+                Password = password,
+                QrCodeBase64 = $"data:image/png;base64,{base64}"
+            });
+        }
+
+        // HTML-Datei erstellen
+        var htmlContent = GenerateHtmlFile(qrCodesData);
+
+        // HTML-Datei herunterladen
+        var fileName = $"QR-Codes_{DateTime.Now:yyyyMMdd_HHmmss}.html";
+        await JsRuntime.InvokeVoidAsync("downloadFile", fileName, htmlContent, "text/html");
+
+        adminMsg = $"{qrCodeCount} QR-Codes wurden erfolgreich generiert und heruntergeladen.";
+        showGenerateQrPopup = false;
+    }
+    catch (Exception ex)
+    {
+        adminMsg = $"Fehler beim Generieren: {ex.Message}";
+    }
+}
+
+private string GeneratePassword()
+{
+    // Einfaches Passwort generieren (8 Zeichen)
+    const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    var random = new Random();
+    return new string(Enumerable.Repeat(chars, 8)
+        .Select(s => s[random.Next(s.Length)]).ToArray());
+}
+
+private class QrCodeData
+{
+    public int Id { get; set; }
+    public string Token { get; set; }
+    public string Password { get; set; }
+    public string QrCodeBase64 { get; set; }
+}
+
+private string GenerateHtmlFile(List<QrCodeData> qrCodes)
+{
+    var sb = new System.Text.StringBuilder();
+
+    sb.AppendLine("<!DOCTYPE html>");
+    sb.AppendLine("<html lang='de'>");
+    sb.AppendLine("<head>");
+    sb.AppendLine("    <meta charset='UTF-8'>");
+    sb.AppendLine("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+    sb.AppendLine("    <title>QR-Codes für Teilnehmer</title>");
+    sb.AppendLine("    <style>");
+    sb.AppendLine("        * {");
+    sb.AppendLine("            margin: 0;");
+    sb.AppendLine("            padding: 0;");
+    sb.AppendLine("            box-sizing: border-box;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        body {");
+    sb.AppendLine("            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;");
+    sb.AppendLine("            background: #f5f5f5;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .page {");
+    sb.AppendLine("            display: none;");
+    sb.AppendLine("            min-height: 100vh;");
+    sb.AppendLine("            padding: 40px 20px;");
+    sb.AppendLine("            background: white;");
+    sb.AppendLine("            flex-direction: column;");
+    sb.AppendLine("            align-items: center;");
+    sb.AppendLine("            justify-content: center;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .page.active {");
+    sb.AppendLine("            display: flex;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .qr-container {");
+    sb.AppendLine("            text-align: center;");
+    sb.AppendLine("            max-width: 600px;");
+    sb.AppendLine("            width: 100%;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .page-number {");
+    sb.AppendLine("            color: #64748b;");
+    sb.AppendLine("            font-size: 14px;");
+    sb.AppendLine("            font-weight: 500;");
+    sb.AppendLine("            margin-bottom: 20px;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        h1 {");
+    sb.AppendLine("            color: #0f172a;");
+    sb.AppendLine("            font-size: 28px;");
+    sb.AppendLine("            font-weight: 700;");
+    sb.AppendLine("            margin-bottom: 10px;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .subtitle {");
+    sb.AppendLine("            color: #64748b;");
+    sb.AppendLine("            font-size: 16px;");
+    sb.AppendLine("            margin-bottom: 40px;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .qr-code-wrapper {");
+    sb.AppendLine("            background: #f8fafc;");
+    sb.AppendLine("            border-radius: 20px;");
+    sb.AppendLine("            padding: 40px;");
+    sb.AppendLine("            margin-bottom: 30px;");
+    sb.AppendLine("            border: 2px solid #e2e8f0;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .qr-code {");
+    sb.AppendLine("            max-width: 300px;");
+    sb.AppendLine("            width: 100%;");
+    sb.AppendLine("            height: auto;");
+    sb.AppendLine("            border-radius: 12px;");
+    sb.AppendLine("            background: white;");
+    sb.AppendLine("            padding: 20px;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .info-box {");
+    sb.AppendLine("            background: #eff6ff;");
+    sb.AppendLine("            border: 1px solid #bfdbfe;");
+    sb.AppendLine("            border-radius: 12px;");
+    sb.AppendLine("            padding: 20px;");
+    sb.AppendLine("            margin-bottom: 30px;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .info-row {");
+    sb.AppendLine("            display: flex;");
+    sb.AppendLine("            justify-content: space-between;");
+    sb.AppendLine("            align-items: center;");
+    sb.AppendLine("            padding: 10px 0;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .info-label {");
+    sb.AppendLine("            color: #475569;");
+    sb.AppendLine("            font-size: 14px;");
+    sb.AppendLine("            font-weight: 500;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .info-value {");
+    sb.AppendLine("            color: #0f172a;");
+    sb.AppendLine("            font-size: 16px;");
+    sb.AppendLine("            font-weight: 600;");
+    sb.AppendLine("            font-family: 'Courier New', monospace;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .password-value {");
+    sb.AppendLine("            color: #2563eb;");
+    sb.AppendLine("            font-size: 20px;");
+    sb.AppendLine("            letter-spacing: 2px;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .buttons {");
+    sb.AppendLine("            display: flex;");
+    sb.AppendLine("            gap: 15px;");
+    sb.AppendLine("            justify-content: center;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .btn {");
+    sb.AppendLine("            padding: 14px 28px;");
+    sb.AppendLine("            font-size: 16px;");
+    sb.AppendLine("            font-weight: 600;");
+    sb.AppendLine("            border: none;");
+    sb.AppendLine("            border-radius: 10px;");
+    sb.AppendLine("            cursor: pointer;");
+    sb.AppendLine("            transition: all 0.2s;");
+    sb.AppendLine("            display: inline-flex;");
+    sb.AppendLine("            align-items: center;");
+    sb.AppendLine("            gap: 8px;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .btn-primary {");
+    sb.AppendLine("            background: #2563eb;");
+    sb.AppendLine("            color: white;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .btn-primary:hover {");
+    sb.AppendLine("            background: #1d4ed8;");
+    sb.AppendLine("            transform: translateY(-2px);");
+    sb.AppendLine("            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .btn-secondary {");
+    sb.AppendLine("            background: #f1f5f9;");
+    sb.AppendLine("            color: #475569;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        .btn-secondary:hover {");
+    sb.AppendLine("            background: #e2e8f0;");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        @media print {");
+    sb.AppendLine("            .page {");
+    sb.AppendLine("                page-break-after: always;");
+    sb.AppendLine("                display: flex !important;");
+    sb.AppendLine("            }");
+    sb.AppendLine("            .buttons {");
+    sb.AppendLine("                display: none;");
+    sb.AppendLine("            }");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        @media (max-width: 768px) {");
+    sb.AppendLine("            h1 {");
+    sb.AppendLine("                font-size: 24px;");
+    sb.AppendLine("            }");
+    sb.AppendLine("            .qr-code-wrapper {");
+    sb.AppendLine("                padding: 30px 20px;");
+    sb.AppendLine("            }");
+    sb.AppendLine("            .qr-code {");
+    sb.AppendLine("                max-width: 250px;");
+    sb.AppendLine("            }");
+    sb.AppendLine("        }");
+    sb.AppendLine("    </style>");
+    sb.AppendLine("</head>");
+    sb.AppendLine("<body>");
+
+    // QR-Code Seiten generieren
+    for (int i = 0; i < qrCodes.Count; i++)
+    {
+        var qr = qrCodes[i];
+        var isFirst = i == 0;
+        var isLast = i == qrCodes.Count - 1;
+
+        sb.AppendLine($"    <div class='page {(isFirst ? "active" : "")}' id='page-{i}'>");
+        sb.AppendLine("        <div class='qr-container'>");
+        sb.AppendLine($"            <div class='page-number'>Code {qr.Id} von {qrCodes.Count}</div>");
+        sb.AppendLine("            <h1>Teilnehmer QR-Code</h1>");
+        sb.AppendLine("            <p class='subtitle'>Scannen Sie diesen Code für den Zugang</p>");
+        sb.AppendLine("            ");
+        sb.AppendLine("            <div class='qr-code-wrapper'>");
+        sb.AppendLine($"                <img src='{qr.QrCodeBase64}' alt='QR Code {qr.Id}' class='qr-code' />");
+        sb.AppendLine("            </div>");
+        sb.AppendLine("");
+        sb.AppendLine("            <div class='info-box'>");
+        sb.AppendLine("                <div class='info-row'>");
+        sb.AppendLine("                    <span class='info-label'>Teilnehmer-Nummer:</span>");
+        sb.AppendLine($"                    <span class='info-value'>#{qr.Id:D3}</span>");
+        sb.AppendLine("                </div>");
+        sb.AppendLine("            </div>");
+        sb.AppendLine("");
+        sb.AppendLine("            <div class='buttons'>");
+
+        if (!isFirst)
+        {
+            sb.AppendLine($"                <button class='btn btn-secondary' onclick='showPage({i - 1})'>");
+            sb.AppendLine("                    ← Vorheriger");
+            sb.AppendLine("                </button>");
+        }
+
+        if (!isLast)
+        {
+            sb.AppendLine($"                <button class='btn btn-primary' onclick='showPage({i + 1})'>");
+            sb.AppendLine("                    Nächster Code →");
+            sb.AppendLine("                </button>");
+        }
+        else
+        {
+            sb.AppendLine("                <button class='btn btn-primary' onclick='window.print()'>");
+            sb.AppendLine("                    🖨️ Drucken");
+            sb.AppendLine("                </button>");
+        }
+
+        sb.AppendLine("            </div>");
+        sb.AppendLine("        </div>");
+        sb.AppendLine("    </div>");
+    }
+
+    // JavaScript
+    sb.AppendLine("");
+    sb.AppendLine("    <script>");
+    sb.AppendLine("        function showPage(pageIndex) {");
+    sb.AppendLine("            const pages = document.querySelectorAll('.page');");
+    sb.AppendLine("            pages.forEach((page, index) => {");
+    sb.AppendLine("                if (index === pageIndex) {");
+    sb.AppendLine("                    page.classList.add('active');");
+    sb.AppendLine("                } else {");
+    sb.AppendLine("                    page.classList.remove('active');");
+    sb.AppendLine("                }");
+    sb.AppendLine("            });");
+    sb.AppendLine("        }");
+    sb.AppendLine("");
+    sb.AppendLine("        document.addEventListener('keydown', (e) => {");
+    sb.AppendLine("            const activePage = document.querySelector('.page.active');");
+    sb.AppendLine("            if (!activePage) return;");
+    sb.AppendLine("            const pageId = parseInt(activePage.id.replace('page-', ''));");
+    sb.AppendLine("            ");
+    sb.AppendLine($"            if (e.key === 'ArrowRight' && pageId < {qrCodes.Count - 1}) {{");
+    sb.AppendLine("                showPage(pageId + 1);");
+    sb.AppendLine("            } else if (e.key === 'ArrowLeft' && pageId > 0) {");
+    sb.AppendLine("                showPage(pageId - 1);");
+    sb.AppendLine("            }");
+    sb.AppendLine("        });");
+    sb.AppendLine("    </script>");
+    sb.AppendLine("</body>");
+    sb.AppendLine("</html>");
+
+    return sb.ToString();
+}
 }
