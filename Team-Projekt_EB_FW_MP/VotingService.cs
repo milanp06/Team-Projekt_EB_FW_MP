@@ -1,4 +1,4 @@
 ﻿public class VotingService
 {
-  public string VotingType { get; set; } = "Schulvoting";
+  public string VotingType { get; set; } = "Publikumsvoting";
 }
