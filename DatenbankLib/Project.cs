@@ -166,5 +166,53 @@ namespace DatenbankLib
 
             return errorMessage;
 		}
+
+        public static bool DeleteVotings(string votingType)
+        {
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+
+            if (votingType == "Schulvoting") return false;
+            string _votingType = votingType == "Publikumsvoting" ? "Publikumsvoting" : "Juryvoting";
+
+            int count = GetProjectCount();
+            for (int i = 1; i <= count; i++)
+            {
+                string sql = $"UPDATE {table_friendsOfAward_Projects} SET {_votingType} = '0' WHERE id='{i}'";
+
+                try
+                {
+                    wrappr.RunNonQuery(sql);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static List<string> GetJuryProjects()
+        {
+            List<string> contestants = new();
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+            DataTable dt = new();
+            string sql = $"SELECT Title FROM {table_friendsOfAward_Projects} ORDER BY Publikumsvoting DESC LIMIT 6";
+
+            try
+            {
+                dt = wrappr.RunQuery(sql);
+                foreach (DataRow row in dt.Rows) contestants.Add(row[0].ToString());
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return contestants;
+        }
+
     }
 }
