@@ -180,6 +180,7 @@ namespace DatenbankLib
             List<JuryRating> ratings = DatenbankLib.JuryRating.GetAllJuryRatings();
 
             int count = projectNames.Count();
+
             if (count <= 0) return "Keine Projekte gefunden!";
 
             int[] votePoints = new int[count];
