@@ -347,7 +347,7 @@
         if (confirmed)
         {
             collection.Clear();
-            bool isOK = Project.DeleteVotings(votingType);
+            bool isOK = Project.DeleteVotings(votingService.VotingType);
             adminMsg = "Alle Bewertungen wurden gelöscht.";
         }
     }
