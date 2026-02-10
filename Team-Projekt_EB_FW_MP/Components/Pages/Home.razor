@@ -121,6 +121,9 @@
 					newValue = 1;
 					countFavoriten++;
 					favoritenList.Add(btnIndex + 1);
+				} else
+				{
+					fehlerMeldung = "Maximal 5 Favoriten sind erlaubt.";
 				}
 				break;
 
@@ -128,12 +131,14 @@
 				newValue = 0;
 				countFavoriten--;
 				favoritenList.Remove(btnIndex + 1);
+				fehlerMeldung = "";
 				break;
 
 			case 2:
 				newValue = 0;
 				countTopFavorit--;
 				topFavorit = -1;
+				fehlerMeldung = "";
 				break;
 		}
 
@@ -155,6 +160,7 @@
 				newValue = 2;
 				countTopFavorit = 1;
 				topFavorit = btnIndex + 1;
+				fehlerMeldung = "";
 			}
 			else if (button.Item2 == 1)
 			{
@@ -163,6 +169,7 @@
 				topFavorit = btnIndex + 1;
 				countFavoriten--;
 				favoritenList.Remove(btnIndex + 1);
+				fehlerMeldung = "";
 			}
 		}
 		else if (button.Item2 == 2)
@@ -170,6 +177,7 @@
 			newValue = 0;
 			countTopFavorit = 0;
 			topFavorit = 0;
+			fehlerMeldung = "";
 		}
 
 		info = UpdateInfo();
@@ -187,7 +195,6 @@
 
 		if (remainingFavs == 0 && remainingTop == 0) submitBtn = true;
 		else submitBtn = false;
-		fehlerMeldung = remainingFavs == 0 ? "Maximal 5 Favoriten sind erlaubt." : "";
 
 		return infoText;
 	}
