@@ -5,7 +5,7 @@ namespace DatenbankLib
     public class Rating
     {
         // Merkmale 
-        private static string table_friendsOfAward_Ranking = "friendsOfAward_Ranking";
+        private static string table_friendsOfAward_Rating = "friendsOfAward_Rating";
 
         // Properties
         public string Token { get; }
@@ -37,7 +37,7 @@ namespace DatenbankLib
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
 
-            string sql = $"DELETE FROM {table_friendsOfAward_Ranking};";
+            string sql = $"DELETE FROM {table_friendsOfAward_Rating};";
             int count = 0;
 
             try
@@ -59,7 +59,7 @@ namespace DatenbankLib
             string successMessage = $"Erfolgreich eingefügt: {rating}";
             string errorMessage = successMessage;
             int errorCount = 0;
-            string sql = $"INSERT INTO {table_friendsOfAward_Ranking} " +
+            string sql = $"INSERT INTO {table_friendsOfAward_Rating} " +
              "(Token, TopFavorit, Favorit1, Favorit2, Favorit3, Favorit4, Favorit5) " +
              $"SELECT u.token, {rating.TopFavorit}, {rating.Favorit1}, {rating.Favorit2}, {rating.Favorit3}, {rating.Favorit4}, {rating.Favorit5} " +
              $"FROM friendsofaward_user u WHERE u.token = '{SqlEscape(rating.Token)}' LIMIT 1;";
@@ -92,7 +92,7 @@ namespace DatenbankLib
         public static List<Rating> GetAllRatings()
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
-            string sql = "SELECT * FROM friendsOfAward_Ranking;";
+            string sql = $"SELECT * FROM {table_friendsOfAward_Rating};";
             DataTable eventTable = new DataTable();
 
             List<Rating> ratings = new List<Rating>();
