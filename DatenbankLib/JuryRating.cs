@@ -10,7 +10,7 @@ namespace DatenbankLib
     internal class JuryRating
     {
         // Merkmale 
-        private static string table_friendsOfAward_JuryRating = "friendsOfAward_JuryRating";
+        private static string table_friendsOfAward_JuryRating = "friendsofaward_juryrating";
 
         // Properties
         public string Token { get; }

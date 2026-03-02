@@ -111,6 +111,7 @@
     private int currentContestantIndex = 0;
     private Dictionary<string, int> scores = new();
     private List<Contestant> contestants = new();
+    public List<string> contestantsString = new();
     private string warningMessage = "";
     private System.Threading.Timer? warningTimer;
 
@@ -154,19 +155,21 @@
 
     protected override void OnInitialized()
     {
-        contestants = GetContestants();
+        (contestants, contestantsString) = GetContestants();
     }
 
-    private List<Contestant> GetContestants()
+    private (List<Contestant>, List<string>) GetContestants()
     {
         List<string> _contestants = Project.GetJuryProjects();
         List<Contestant> result = new();
+        List<string> resultString = new();
         foreach (string contestant in _contestants)
         {
             Contestant _contestant = new Contestant(result.Count+1, contestant);
             result.Add(_contestant);
+            resultString.Add(contestant);
         }
-        return result;
+        return (result, resultString);
     }
 
     private void SetScore(int contestantId, int criterionId, int score)
