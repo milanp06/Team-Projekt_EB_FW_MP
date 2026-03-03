@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS friendsofaward_juryrating;
 DROP TABLE IF EXISTS friendsofaward_rating;
 DROP TABLE IF EXISTS friendsofaward_user;
 DROP TABLE IF EXISTS friendsofaward_projects;
@@ -50,20 +49,6 @@ CREATE TABLE friendsofaward_rating (
     favorit5 INT NOT NULL DEFAULT 0,
     PRIMARY KEY (token),
     CONSTRAINT FK_rating_token
-        FOREIGN KEY (token)
-        REFERENCES friendsofaward_user (token)
-) ENGINE=InnoDB;
-
-CREATE TABLE friendsofaward_juryrating (
-    token VARCHAR(255) NOT NULL,
-    projekt1 INT NOT NULL DEFAULT 0,
-    projekt2 INT NOT NULL DEFAULT 0,
-    projekt3 INT NOT NULL DEFAULT 0,
-    projekt4 INT NOT NULL DEFAULT 0,
-    projekt5 INT NOT NULL DEFAULT 0,
-    projekt6 INT NOT NULL DEFAULT 0,
-    PRIMARY KEY (token),
-    CONSTRAINT FK_jury_token
         FOREIGN KEY (token)
         REFERENCES friendsofaward_user (token)
 ) ENGINE=InnoDB;

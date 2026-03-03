@@ -67,7 +67,7 @@
                 <button class="nav-btn" @onclick="PreviousContestant" disabled="@(currentContestantIndex == 0)">
                     ← Previous
                 </button>
-                <button class="nav-btn primary" @onclick="NextContestant" disabled="@(votingService.VotingType != "Juryvoting")">
+                <button class="nav-btn primary" @onclick="NextContestant" disabled="@(votingService.VotingType != "Juryvoting" || tokenType != "Juryvoting")">
                     @(currentContestantIndex < contestants.Count - 1 ? "Next →" : "Finish")
                 </button>
             </div>
@@ -99,8 +99,6 @@
                     }
                 </tbody>
             </table>
-
-            <button class="reset-btn" @onclick="ResetVotes">Start Over</button>
         </div>
     }
 </div>
@@ -108,6 +106,8 @@
 @code {
     [Parameter]
     public string Token { get; set; } = "";
+
+    private string tokenType = "";
 
     private int currentContestantIndex = 0;
     private Dictionary<string, int> scores = new();
@@ -155,8 +155,11 @@
 
     protected override void OnInitialized()
     {
-        
         (contestants, ContestantState.ContestantsString) = GetContestants();
+        tokenType = QrToken.GetTokenType(Token);
+
+        if (votingService.VotingType != "Juryvoting") warningMessage = $"Gerade läuft das {votingService.VotingType}";
+        if (tokenType != "Juryvoting") warningMessage = $"Tokentyp falsch: {tokenType}";
     }
 
     private (List<Contestant>, List<string>) GetContestants()
@@ -216,29 +219,44 @@
 
     private List<ContestantResult> GetResults()
     {
+        const double maxTotalPoints = 30.0;
+
         List<ContestantResult> results = contestants.Select(c =>
         {
-            double totalScore = 0.0;
+            double weightedScore = 0.0;
+
             foreach (var criterion in criteria)
             {
                 double score = GetScore(c.Id, criterion.Id);
-                totalScore += score * (criterion.Weight / 100.0);
+                weightedScore += score * (criterion.Weight / 100.0);
             }
 
+            double totalScore = weightedScore * (maxTotalPoints / 5.0);
+
             return new ContestantResult
-            {
-                Id = c.Id,
-                Name = c.Name,
-                TotalScore = totalScore
-            };
-        }).OrderByDescending(r => r.TotalScore).ToList();
+        {
+            Id = c.Id,
+            Name = c.Name,
+            TotalScore = totalScore
+        };
+        })
+        .OrderByDescending(r => r.TotalScore)
+        .ToList();
 
         for (int i = 0; i < results.Count; i++)
         {
             results[i].Rank = i + 1;
         }
-
+        UploadJuryRatings(results);
         return results;
+    }
+
+    private void UploadJuryRatings(List<ContestantResult> results)
+    {
+        List<double> scores = results.Select(r => r.TotalScore).ToList();
+        Console.WriteLine(scores);
+        DatenbankLib.JuryRating rating = new(Token, scores[0], scores[1], scores[2], scores[3], scores[4], scores[5]);
+        DatenbankLib.JuryRating.AddJuryRanking(rating);
     }
 
     private string GetRowClass(Criterion criterion)

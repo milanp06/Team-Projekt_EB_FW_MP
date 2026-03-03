@@ -7,21 +7,21 @@ using System.Threading.Tasks;
 
 namespace DatenbankLib
 {
-    internal class JuryRating
+    public class JuryRating
     {
         // Merkmale 
         private static string table_friendsOfAward_JuryRating = "friendsOfAward_JuryRating";
 
         // Properties
         public string Token { get; }
-        public int Projekt1 { get; }
-        public int Projekt2 { get; }
-        public int Projekt3 { get; }
-        public int Projekt4 { get; }
-        public int Projekt5 { get; }
-        public int Projekt6 { get; }
+        public double Projekt1 { get; }
+        public double Projekt2 { get; }
+        public double Projekt3 { get; }
+        public double Projekt4 { get; }
+        public double Projekt5 { get; }
+        public double Projekt6 { get; }
         // Konstruktor
-        public JuryRating(string token, int projekt1, int projekt2, int projekt3, int projekt4, int projekt5, int projekt6)
+        public JuryRating(string token, double projekt1, double projekt2, double projekt3, double projekt4, double projekt5, double projekt6)
         {
             Token = token;
             Projekt1 = projekt1;
@@ -32,17 +32,65 @@ namespace DatenbankLib
             Projekt6 = projekt6;
         }
         private static string SqlEscape(string? s) => (s ?? "").Replace("'", "''");
+
+        public static void CreateJuryRankingTable()
+        {
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+            List<string> projects = Project.GetJuryProjects();
+
+            if (projects == null || projects.Count == 0)
+                throw new Exception("Keine Projekte gefunden.");
+
+            string sql = "DROP TABLE IF EXISTS friendsofaward_juryrating;";
+            sql += "CREATE TABLE friendsofaward_juryrating (";
+            sql += "token VARCHAR(255) NOT NULL,";
+
+            foreach (var project in projects)
+            {
+                string safeProject = project.Replace("`", "").Replace("'", "");
+                sql += $"`{safeProject}` DOUBLE NOT NULL DEFAULT 0,";
+            }
+
+            sql += "PRIMARY KEY (token),";
+            sql += "CONSTRAINT FK_jury_token ";
+            sql += "FOREIGN KEY (token) ";
+            sql += "REFERENCES friendsofaward_user (token)";
+            sql += ") ENGINE=InnoDB;";
+
+            try
+            {
+                wrappr.RunNonQuery(sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine($"Fehler beim Erstellen der Tabelle: {ex.Message}");
+            }
+        }
+
         public static string AddJuryRanking(JuryRating rating)
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+            List<string> projects = Project.GetJuryProjects();
             string successMessage = $"Erfolgreich eingefügt: {rating}";
             string errorMessage = successMessage;
             int errorCount = 0;
 
-            string sql = $"INSERT INTO {table_friendsOfAward_JuryRating} " +
-             "(Token, Projekt1, Projekt2, Projekt3, Projekt4, Projekt5, Projekt6) " +
-             $"SELECT u.token, {rating.Projekt1}, {rating.Projekt2}, {rating.Projekt3}, {rating.Projekt4}, {rating.Projekt5}, {rating.Projekt6} " +
-             $"FROM friendsofaward_user u WHERE u.token = '{SqlEscape(rating.Token)}' LIMIT 1;";
+            string sql = $@"
+                INSERT INTO {table_friendsOfAward_JuryRating}
+                (token, `{projects[0]}`, `{projects[1]}`, `{projects[2]}`,
+                 `{projects[3]}`, `{projects[4]}`, `{projects[5]}`)
+                SELECT
+                u.token,
+                {rating.Projekt1},
+                {rating.Projekt2},
+                {rating.Projekt3},
+                {rating.Projekt4},
+                {rating.Projekt5},
+                {rating.Projekt6}
+                FROM friendsofaward_user u
+                WHERE u.token = '{SqlEscape(rating.Token)}'
+                LIMIT 1;";
 
             try
             {
@@ -68,6 +116,7 @@ namespace DatenbankLib
 
             return successMessage;
         }
+
         public static List<JuryRating> GetAllJuryRatings()
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;

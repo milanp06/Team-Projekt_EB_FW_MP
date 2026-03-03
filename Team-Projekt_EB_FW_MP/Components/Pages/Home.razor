@@ -24,6 +24,15 @@
 	fehlerMeldung = $"Gerade läuft das {votingService.VotingType}";
 }
 
+
+@if (tokenType != "Publikumsvoting")
+{
+	enableVoting = false;
+	info = "";
+	fehlerMeldung = $"Token passt von Typ her nicht!";
+}
+
+
 <div class="buttonGrid">
 	@foreach(int index in Enumerable.Range(0, selectableButtons.Count))
 	{
@@ -41,6 +50,8 @@
 @code {
 	[Parameter]
 	public string Token { get; set; } = "";
+
+	private string tokenType = "";
 
 	List<(string, int)> selectableButtons = new();
 
@@ -74,6 +85,7 @@
 	protected override async Task OnInitializedAsync()
 	{
 		int buttons = DatenbankLib.Project.GetProjectCount();
+		tokenType = QrToken.GetTokenType(Token);
 
 		for (int i = 0; i < buttons; i++)
 		{

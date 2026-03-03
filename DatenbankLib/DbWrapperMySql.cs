@@ -37,15 +37,14 @@ public class DbWrapperMySql
   // KONSTRUKTOR
   private DbWrapperMySql()
   { // Die geheimen Credentials für den DB-Zugriff - am Desktop "versteckt"
-    string[] db_args = File.ReadAllLines(
-      Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory) +
-      "/db_args.txt");
-    string comment = db_args[0];
+    string path = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+    string[] db_args = File.ReadAllLines(path + "/db_argsV3.txt");
     string server = db_args[1];
     string db = db_args[2];
-    string userId = db_args[3];
-    string password = db_args[4];
-    connString = $"Server={server};Database={db};" +
+    string port = db_args[3];
+    string userId = db_args[4];
+    string password = db_args[5];
+    connString = $"Server={server};Database={db};Port={port};" +
                              $"User ID={userId};Password={password};";
 
     connection = new MySqlConnection(connString);  // eventuell Exception!.

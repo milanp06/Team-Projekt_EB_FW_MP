@@ -177,22 +177,22 @@ namespace DatenbankLib
         {
             string errorMessage = "";
 
-            List<JuryRating> ratings = DatenbankLib.JuryRating.GetAllJuryRatings();
+            List<JuryRating> ratings = JuryRating.GetAllJuryRatings();
 
             int count = projectNames.Count();
 
             if (count <= 0) return "Keine Projekte gefunden!";
 
-            int[] votePoints = new int[count];
+            double[] votePoints = new double[count];
 
             foreach (JuryRating rating in ratings)
             {
-                votePoints[(rating.Projekt1) - 1] += 2;
-                votePoints[(rating.Projekt2) - 1] += 1;
-                votePoints[(rating.Projekt3) - 1] += 1;
-                votePoints[(rating.Projekt4) - 1] += 1;
-                votePoints[(rating.Projekt5) - 1] += 1;
-                votePoints[(rating.Projekt6) - 1] += 1;
+                votePoints[0] += rating.Projekt1;
+                votePoints[1] += rating.Projekt2;
+                votePoints[2] += rating.Projekt3;
+                votePoints[3] += rating.Projekt4;
+                votePoints[4] += rating.Projekt5;
+                votePoints[5] += rating.Projekt6;
             }
 
             Console.WriteLine("\nVotes:");
@@ -201,7 +201,7 @@ namespace DatenbankLib
                 Console.WriteLine($"{i + 1}: {votePoints[i]} Votes");
             }
 
-            int maxPoints = votePoints[0];
+            double maxPoints = votePoints[0];
 
             for (int i = 0; i < count; i++)
             {
