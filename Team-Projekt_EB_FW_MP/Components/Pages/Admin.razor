@@ -142,6 +142,9 @@
                     <button disabled class="control-btn currvoting">
                         Typ: @votingService.VotingType
                     </button>
+                    <button @onclick="CalculateScores" class="control-btn import">
+                        Auswerten
+                    </button>
 
                 </div>
 
@@ -273,7 +276,7 @@
         Console.WriteLine(token);
 
         // Token in DB speichern
-        var qrToken = new QrToken(token, false);
+        var qrToken = new QrToken(token, false, votingService.VotingType);
 
         DatenbankLib.QrToken.AddQrToken(qrToken);
 
@@ -335,16 +338,33 @@
         if (votingService.VotingType == "Schulvoting")
         {
             votingService.VotingType = "Publikumsvoting";
-            DatenbankLib.Project.CalculatePublikumsvoting();
         }
         else if (votingService.VotingType == "Publikumsvoting")
         {
+            DatenbankLib.JuryRating.CreateJuryRankingTable();
             votingService.VotingType = "Juryvoting";
-            DatenbankLib.Project.CalculateJuryvoting(ContestantState.ContestantsString);
         }
-        else votingService.VotingType = "Schulvoting";
+        else {
+            votingService.VotingType = "Schulvoting";
+        }
 
         StateHasChanged();
+    }
+
+    private void CalculateScores()
+    {
+        if (votingService.VotingType == "Schulvoting")
+        {
+            return;
+        }
+        else if (votingService.VotingType == "Publikumsvoting")
+        {
+            DatenbankLib.Project.CalculatePublikumsvoting();
+        }
+        else
+        {
+            DatenbankLib.Project.CalculateJuryvoting(ContestantState.ContestantsString);
+        }
     }
 
     private void StartVoting()
@@ -515,7 +535,7 @@ private async Task GenerateMultipleQrCodes()
             var password = GeneratePassword(); // Passwort für jeden QR-Code
 
             // Token in DB speichern
-            var qrToken = new QrToken(token, false);
+            var qrToken = new QrToken(token, false, votingService.VotingType);
             DatenbankLib.QrToken.AddQrToken(qrToken);
 
             // QR-Code URL

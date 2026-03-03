@@ -10,18 +10,20 @@ namespace DatenbankLib
         // PROPERTIES
         public string Token { get; set; } = string.Empty;
         public bool Used { get; set; } = false;
+        public string TokenType { get; set; } = string.Empty;
 
-        public QrToken(string token, bool used)
+        public QrToken(string token, bool used, string tokenType)
         {
             Token = token;
             Used = used;
+            TokenType = tokenType;
         }
 
         public static bool AddQrToken(QrToken token)
         {
             DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
 
-            string sql = $"INSERT INTO {table_friendsOfAward_User}(token, TokenUsed) VALUES ('{token.Token}', {(token.Used ? 1 : 0)});";
+            string sql = $"INSERT INTO {table_friendsOfAward_User}(token, TokenUsed, tokentype) VALUES ('{token.Token}', {(token.Used ? 1 : 0)}, '{token.TokenType}');";
 
             try
             {
@@ -74,6 +76,25 @@ namespace DatenbankLib
             {
                 Console.WriteLine(ex.Message);
                 return false;
+            }
+        }
+
+        public static string GetTokenType(string token)
+        {
+            DbWrapperMySql wrappr = DbWrapperMySql.Wrapper;
+            DataTable dt = new();
+
+            string sql = $"SELECT tokentype FROM friendsOfAward_User WHERE token = '{token}' LIMIT 1;";
+
+            try
+            {
+                dt = wrappr.RunQuery(sql);
+                return dt.Rows[0][0].ToString();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return string.Empty;
             }
         }
 
