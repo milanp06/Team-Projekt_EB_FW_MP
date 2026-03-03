@@ -13,6 +13,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<MyCustomAuthStateProvider>();
+builder.Services.AddScoped<ContestantStateService>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
   provider.GetRequiredService<MyCustomAuthStateProvider>());
 builder.Services.AddSingleton<VotingService>();

@@ -5,7 +5,7 @@
 @inject IJSRuntime JsRuntime
 @inject VotingService votingService
 @implements IDisposable
-
+@inject ContestantStateService ContestantState
 
 <div class="admin-container">
 
@@ -311,6 +311,7 @@
     private bool hasVoted = false;
 
     private List<Results> collection = new();
+    public List<string> juryContestants = new();
 
     private bool showImportPopup = false;
     private string? importFileName;
@@ -339,7 +340,7 @@
         else if (votingService.VotingType == "Publikumsvoting")
         {
             votingService.VotingType = "Juryvoting";
-            DatenbankLib.Project.CalculateJuryvoting();
+            DatenbankLib.Project.CalculateJuryvoting(ContestantState.ContestantsString);
         }
         else votingService.VotingType = "Schulvoting";
 

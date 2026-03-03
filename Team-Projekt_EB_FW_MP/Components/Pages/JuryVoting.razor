@@ -1,6 +1,7 @@
 ﻿@page "/Jury/{Token}"
 @rendermode InteractiveServer
 @inject VotingService votingService
+@inject ContestantStateService ContestantState
 
 <PageTitle>Jury Voting System</PageTitle>
 
@@ -111,7 +112,6 @@
     private int currentContestantIndex = 0;
     private Dictionary<string, int> scores = new();
     private List<Contestant> contestants = new();
-    public List<string> contestantsString = new();
     private string warningMessage = "";
     private System.Threading.Timer? warningTimer;
 
@@ -155,7 +155,8 @@
 
     protected override void OnInitialized()
     {
-        (contestants, contestantsString) = GetContestants();
+        
+        (contestants, ContestantState.ContestantsString) = GetContestants();
     }
 
     private (List<Contestant>, List<string>) GetContestants()
